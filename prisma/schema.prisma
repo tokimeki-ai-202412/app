@@ -6,3 +6,43 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id        String   @id @default(uuid())
+  googleId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Character {
+  id            String   @id @default(uuid())
+  name          String
+  thumbnailPath String
+  userId        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum ArtifactStatus {
+  QUQUED
+  GENERATING
+  CANCELED
+  ERROR
+  DONE
+}
+
+model Artifact {
+  id          String          @id @default(uuid())
+  status      ArtifactStatus? @default(QUQUED)
+  data        Json
+  characterId String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
