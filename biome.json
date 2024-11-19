@@ -15,7 +15,8 @@
     "ignore": [
       "./**/node_modules",
       "./src/components/ui",
-      "./src/libraries/connect-gen"
+      "./src/libraries/connect-gen",
+      "./src/app/not-found.tsx"
     ],
     "ignoreUnknown": true
   },
