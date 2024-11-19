@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package api.v1.user;
+
+import "buf/validate/validate.proto";
+import "model/v1/user.proto";
+
+message WhoisRequest {
+}
+
+message WhoisResponse {
+  model.v1.User user = 1;
+}
+
+service Service {
+  rpc Whois(WhoisRequest) returns (WhoisResponse) {}
+}

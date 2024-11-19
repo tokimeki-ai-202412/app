@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package model.v1;
+
+message User {
+  string id = 1;
+  string name = 2;
+  string username = 3;
+  string avatar_url = 4;
+  string description = 5;
+}
