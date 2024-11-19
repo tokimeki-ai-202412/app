@@ -12,7 +12,11 @@
       "./**/*.json",
       "./**/*.jsonc"
     ],
-    "ignore": ["./**/node_modules", "./src/libraries/connect-gen"],
+    "ignore": [
+      "./**/node_modules",
+      "./src/components/ui",
+      "./src/libraries/connect-gen"
+    ],
     "ignoreUnknown": true
   },
   "organizeImports": {
