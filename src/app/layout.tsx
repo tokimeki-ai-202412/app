@@ -1,3 +1,4 @@
+import { Provider } from '@/components/ui/provider';
 import type { Metadata } from 'next';
 import type { ReactElement, ReactNode } from 'react';
 
@@ -13,8 +14,10 @@ export default function RootLayout({
   children,
 }: RootLayoutProps): ReactElement {
   return (
-    <html lang="ja">
-      <body>{children}</body>
+    <html lang="ja" suppressHydrationWarning={true}>
+      <body>
+        <Provider>{children}</Provider>
+      </body>
     </html>
   );
 }
