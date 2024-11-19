@@ -56,7 +56,7 @@ export class Authenticator {
       body: body,
     }).then((res) => res.json());
     const token: JWT = new JWT(res.id_token);
-    const isValid: boolean = await this.verify(token);
+    const _isValid: boolean = await this.verify(token);
 
     return token;
   }

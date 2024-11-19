@@ -15,7 +15,6 @@ export const runtime = 'edge';
 function initPrismaClient(): PrismaClient {
   const connection = connect({
     url: getRequestContext().env.DATABASE_URL,
-    // biome-ignore
     fetch: (url, init) => {
       if (init) {
         // biome-ignore lint/performance/noDelete: <explanation>
@@ -98,8 +97,7 @@ export async function GET(req: NextRequest) {
       headers,
       status: 307,
     });
-  } catch (e: any) {
-    console.log(e);
+  } catch (_e: any) {
     return new Response(null, { status: 500 });
   }
 }

@@ -16,6 +16,7 @@
       "./**/node_modules",
       "./src/components/ui",
       "./src/libraries/connect-gen",
+      "./src/libraries/openid",
       "./src/app/not-found.tsx"
     ],
     "ignoreUnknown": true
