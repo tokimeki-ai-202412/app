@@ -7,6 +7,7 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import { PrismaClient } from '@prisma/client';
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
 import { connect } from '@tidbcloud/serverless';
+import { type SerializeOptions, serialize } from 'cookie';
 import type { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
@@ -59,7 +60,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // update user data
+    // get user data
     const user = await prisma.user.findFirstOrThrow({
       where: {
         googleId,
@@ -69,8 +70,33 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return new Response(JSON.stringify(user), {
-      status: 200,
+    // create session
+    const session = await prisma.session.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
+    // Create cookie
+    const url = new URL(req.url);
+    const cookieOptions: SerializeOptions = {
+      path: '/',
+      domain: url.hostname,
+      maxAge: 60 * 60 * 24 * 14,
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    };
+    const cookieString = serialize('token', session.id, cookieOptions);
+
+    // add headers
+    const headers = new Headers();
+    headers.append('Set-Cookie', cookieString);
+    headers.append('Location', '/');
+
+    return new Response(null, {
+      headers,
+      status: 307,
     });
   } catch (e: any) {
     console.log(e);
