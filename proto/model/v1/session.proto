@@ -2,6 +2,6 @@ syntax = "proto3";
 
 package model.v1;
 
-message User {
+message Session {
   string id = 1;
 }

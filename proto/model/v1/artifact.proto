@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package model.v1;
+
+message Artifact {
+  string id = 1;
+  string status = 2;
+  repeated string object_paths = 3;
+  repeated string object_urls = 4;
+  int32 created_at = 5;
+  int32 updated_at = 6;
+}
