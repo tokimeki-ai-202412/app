@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package api.v1.character;
+
+import "model/v1/character.proto";
+
+message ListCharactersRequest {
+}
+
+message ListCharactersResponse {
+  repeated model.v1.Character characters = 1;
+}
+
+message GetCharacterRequest {
+  string character_id = 1;
+}
+
+message GetCharacterResponse {
+  model.v1.Character character = 1;
+}
+
+message CreateCharacterRequest {
+  string name = 1;
+  string thumbnail_path = 2;
+}
+
+message CreateCharacterResponse {
+  model.v1.Character character = 1;
+}
+
+message UpdateCharacterRequest {
+  model.v1.Character character = 1;
+}
+
+message UpdateCharacterResponse {
+  model.v1.Character character = 1;
+}
+
+message DeleteCharacterRequest {
+  string character_id = 1;
+}
+
+message DeleteCharacterResponse {
+}
+
+service Service {
+  rpc ListCharacters(ListCharactersRequest) returns (ListCharactersResponse) {}
+  rpc GetCharacter(GetCharacterRequest) returns (GetCharacterResponse) {}
+  rpc CreateCharacter(CreateCharacterRequest) returns (CreateCharacterResponse) {}
+  rpc UpdateCharacter(UpdateCharacterRequest) returns (UpdateCharacterResponse) {}
+  rpc DeleteCharacter(DeleteCharacterRequest) returns (DeleteCharacterResponse) {}
+}

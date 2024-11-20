@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package api.v1.artifact;
+
+import "model/v1/artifact.proto";
+
+message ListArtifactsRequest {
+  string character_id = 1;
+}
+
+message ListArtifactsResponse {
+  repeated model.v1.Artifact artifacts = 1;
+}
+
+message GetArtifactRequest {
+  string artifact_id = 1;
+}
+
+message GetArtifactResponse {
+  model.v1.Artifact artifact = 1;
+}
+
+message CreateArtifactRequest {
+  model.v1.ArtifactInput input = 1;
+}
+
+message CreateArtifactResponse {
+  model.v1.Artifact artifact = 1;
+}
+
+message CancelArtifactRequest {
+  string artifact_id = 1;
+}
+
+message CancelArtifactResponse {
+  model.v1.Artifact artifact = 1;
+}
+
+message DeleteArtifactRequest {
+  string artifact_id = 1;
+}
+
+message DeleteArtifactResponse {
+}
+
+service Service {
+  rpc ListArtifacts(ListArtifactsRequest) returns (ListArtifactsResponse) {}
+  rpc GetArtifact(GetArtifactRequest) returns (GetArtifactResponse) {}
+  rpc CreateArtifact(CreateArtifactRequest) returns (CreateArtifactResponse) {}
+  rpc CancelArtifact(CancelArtifactRequest) returns (CancelArtifactResponse) {}
+  rpc DeleteArtifact(DeleteArtifactRequest) returns (DeleteArtifactResponse) {}
+}
