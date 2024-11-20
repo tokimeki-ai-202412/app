@@ -2,6 +2,10 @@ syntax = "proto3";
 
 package model.v1;
 
+message ArtifactInput {
+  string image_path = 1;
+}
+
 message Artifact {
   string id = 1;
   string status = 2;
