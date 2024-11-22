@@ -53,27 +53,32 @@ export class Artifact extends Message<Artifact> {
   id = "";
 
   /**
-   * @generated from field: string status = 2;
+   * @generated from field: string job_id = 2;
+   */
+  jobId = "";
+
+  /**
+   * @generated from field: string status = 3;
    */
   status = "";
 
   /**
-   * @generated from field: repeated string object_paths = 3;
+   * @generated from field: repeated string object_paths = 4;
    */
   objectPaths: string[] = [];
 
   /**
-   * @generated from field: repeated string object_urls = 4;
+   * @generated from field: repeated string object_urls = 5;
    */
   objectUrls: string[] = [];
 
   /**
-   * @generated from field: int32 created_at = 5;
+   * @generated from field: int32 created_at = 6;
    */
   createdAt = 0;
 
   /**
-   * @generated from field: int32 updated_at = 6;
+   * @generated from field: int32 updated_at = 7;
    */
   updatedAt = 0;
 
@@ -86,11 +91,12 @@ export class Artifact extends Message<Artifact> {
   static readonly typeName = "model.v1.Artifact";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "status", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "object_paths", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    { no: 4, name: "object_urls", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    { no: 5, name: "created_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 6, name: "updated_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 2, name: "job_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "status", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "object_paths", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 5, name: "object_urls", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 6, name: "created_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 7, name: "updated_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Artifact {
