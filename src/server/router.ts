@@ -1,4 +1,20 @@
+import { Service as ArtifactService } from '@/libraries/connect-gen/api/v1/artifact/api_connect';
+import { Service as CharacterService } from '@/libraries/connect-gen/api/v1/character/api_connect';
 import { Service as UserService } from '@/libraries/connect-gen/api/v1/user/api_connect';
+import {
+  cancelArtifact,
+  createArtifact,
+  deleteArtifact,
+  getArtifact,
+  listArtifacts,
+} from '@/server/api/v1/artifact';
+import {
+  createCharacter,
+  deleteCharacter,
+  getCharacter,
+  listCharacters,
+  updateCharacter,
+} from '@/server/api/v1/character';
 import { whois } from '@/server/api/v1/user';
 import { authenticator } from '@/server/interceptors/auth';
 import {
@@ -21,6 +37,28 @@ export class Router {
   private paths = new Map<string, UniversalHandler>();
   private routes = ({ service }: any) => {
     service(UserService, { whois }, { interceptors: [authenticator] });
+    service(
+      CharacterService,
+      {
+        createCharacter,
+        deleteCharacter,
+        getCharacter,
+        listCharacters,
+        updateCharacter,
+      },
+      { interceptors: [authenticator] },
+    );
+    service(
+      ArtifactService,
+      {
+        cancelArtifact,
+        createArtifact,
+        deleteArtifact,
+        getArtifact,
+        listArtifacts,
+      },
+      { interceptors: [authenticator] },
+    );
   };
 
   constructor(contextValues: ContextValues) {
