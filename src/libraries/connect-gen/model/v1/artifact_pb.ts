@@ -53,14 +53,14 @@ export class Artifact extends Message<Artifact> {
   id = "";
 
   /**
-   * @generated from field: string status = 2;
+   * @generated from field: string job_id = 2;
    */
-  status = "";
+  jobId = "";
 
   /**
-   * @generated from field: repeated string object_paths = 3;
+   * @generated from field: string status = 3;
    */
-  objectPaths: string[] = [];
+  status = "";
 
   /**
    * @generated from field: repeated string object_urls = 4;
@@ -86,8 +86,8 @@ export class Artifact extends Message<Artifact> {
   static readonly typeName = "model.v1.Artifact";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "status", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "object_paths", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 2, name: "job_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "status", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "object_urls", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
     { no: 5, name: "created_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 6, name: "updated_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
