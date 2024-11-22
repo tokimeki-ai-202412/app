@@ -41,6 +41,7 @@ enum ArtifactStatus {
 
 model Artifact {
   id          String          @id @default(uuid())
+  jobId       String
   status      ArtifactStatus? @default(QUQUED)
   data        Json
   characterId String
