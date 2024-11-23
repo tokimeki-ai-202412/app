@@ -1,5 +1,6 @@
-import { contextKeyPrisma } from '@/server/context';
+import { contextKeyPrisma, contextKeyR2 } from '@/server/context';
 import { Router } from '@/server/router';
+import { S3Client } from '@aws-sdk/client-s3';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { createContextValues } from '@connectrpc/connect';
 import { PrismaClient } from '@prisma/client';
@@ -25,11 +26,25 @@ function initPrismaClient(): PrismaClient {
   return new PrismaClient({ adapter });
 }
 
+function initR2(): S3Client {
+  return new S3Client({
+    region: 'auto',
+    endpoint: `https://b85aec95c2061893225e07d0d9ba7137.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: getRequestContext().env.R2_ACCESS_KEY_ID,
+      secretAccessKey: getRequestContext().env.R2_SECRET_ACCESS_KEY,
+    },
+  });
+}
+
 export function POST(req: NextRequest) {
   const prisma = initPrismaClient();
+  const r2 = initR2();
 
   // Create context values
-  const contextValues = createContextValues().set(contextKeyPrisma, prisma);
+  const contextValues = createContextValues();
+  contextValues.set(contextKeyPrisma, prisma);
+  contextValues.set(contextKeyR2, r2);
 
   // handle request
   const router = new Router(contextValues);
