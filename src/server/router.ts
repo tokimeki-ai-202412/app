@@ -1,5 +1,6 @@
 import { Service as ArtifactService } from '@/libraries/connect-gen/api/v1/artifact/api_connect';
 import { Service as CharacterService } from '@/libraries/connect-gen/api/v1/character/api_connect';
+import { Service as StorageService } from '@/libraries/connect-gen/api/v1/storage/api_connect';
 import { Service as UserService } from '@/libraries/connect-gen/api/v1/user/api_connect';
 import {
   cancelArtifact,
@@ -15,6 +16,7 @@ import {
   listCharacters,
   updateCharacter,
 } from '@/server/api/v1/character';
+import { createUploadUrl } from '@/server/api/v1/storage';
 import { whois } from '@/server/api/v1/user';
 import { authenticator } from '@/server/interceptors/auth';
 import {
@@ -37,6 +39,11 @@ export class Router {
   private paths = new Map<string, UniversalHandler>();
   private routes = ({ service }: any) => {
     service(UserService, { whois }, { interceptors: [authenticator] });
+    service(
+      StorageService,
+      { createUploadUrl },
+      { interceptors: [authenticator] },
+    );
     service(
       CharacterService,
       {
