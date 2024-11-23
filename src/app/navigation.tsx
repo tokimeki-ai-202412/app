@@ -27,7 +27,7 @@ export function Navigation(): ReactElement {
         w="full"
         h="64px"
         borderBottomWidth="1px"
-        borderColor="blackAlpha.50"
+        borderColor="blackAlpha.100"
         justify="space-between"
         align="center"
       >
