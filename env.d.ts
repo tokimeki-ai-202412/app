@@ -5,4 +5,6 @@ interface CloudflareEnv {
 	OIDC_CLIENT_ID: string;
 	OIDC_CLIENT_SECRET: string;
 	OIDC_CLIENT_REDIRECT_URI: string;
+	R2_ACCESS_KEY_ID: string;
+	R2_SECRET_ACCESS_KEY: string;
 }
