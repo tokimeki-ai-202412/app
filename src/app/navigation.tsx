@@ -13,8 +13,9 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { useWhois } from '@/states/hooks/user.ts';
-import { Box, Container, Flex, Link, Text } from '@chakra-ui/react';
+import { Box, Container, Flex, Text } from '@chakra-ui/react';
 import { Icon } from '@iconify-icon/react';
+import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 
 export function Navigation(): ReactElement {
@@ -40,7 +41,10 @@ export function Navigation(): ReactElement {
                   <Button>loading</Button>
                 </Skeleton>
               ) : user ? (
-                <></>
+                <>
+                  <Link href="/">Top</Link>
+                  <Link href="/characters">Characters</Link>
+                </>
               ) : (
                 <>
                   <Button onClick={() => setIsOpen(true)}>ログインする</Button>
@@ -62,20 +66,21 @@ export function Navigation(): ReactElement {
             <DialogTitle>ログインする</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            <Link
-              href="/api/login"
-              bg="transparent"
-              color="blackAlpha.700"
-              borderWidth="2px"
-              borderColor="blackAlpha.700"
-              borderRadius="8px"
-            >
-              <Flex p={4} align="center" gap={4}>
-                <Box fontSize="24px">
-                  <Icon icon="flat-color-icons:google" />
-                </Box>
-                <Text fontWeight="bold">Googleでログイン</Text>
-              </Flex>
+            <Link href="/api/login">
+              <Box
+                bg="transparent"
+                color="blackAlpha.700"
+                borderWidth="2px"
+                borderColor="blackAlpha.700"
+                borderRadius="8px"
+              >
+                <Flex p={4} align="center" gap={4}>
+                  <Box fontSize="24px">
+                    <Icon icon="flat-color-icons:google" />
+                  </Box>
+                  <Text fontWeight="bold">Googleでログイン</Text>
+                </Flex>
+              </Box>
             </Link>
           </DialogBody>
           <DialogFooter />
