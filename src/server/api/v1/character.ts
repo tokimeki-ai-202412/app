@@ -11,7 +11,17 @@ import type {
   UpdateCharacterResponse,
 } from '@/libraries/connect-gen/api/v1/character/api_pb';
 import type { Character } from '@/libraries/connect-gen/model/v1/character_pb.ts';
-import { contextKeyPrisma, contextKeyUserId } from '@/server/context.ts';
+import {
+  contextKeyPrisma,
+  contextKeyR2,
+  contextKeyUserId,
+} from '@/server/context.ts';
+import {
+  CopyObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Code, ConnectError, type HandlerContext } from '@connectrpc/connect';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,26 +38,62 @@ export const createCharacter: (
   if (!prisma) {
     throw new ConnectError('Internal Error', Code.Internal);
   }
+  const r2 = ctx.values.get(contextKeyR2);
+  if (!r2) {
+    throw new ConnectError('Internal Error', Code.Internal);
+  }
 
   if (req.name === '') {
     throw new ConnectError('Invalid Argument', Code.InvalidArgument);
   }
 
+  let thumbnailPath = '';
+  if (req.thumbnailPath.startsWith('temporary/')) {
+    try {
+      thumbnailPath = `characters/thumbnail/${crypto.randomUUID()}`;
+      const copyCommand = new CopyObjectCommand({
+        Bucket: 'tokimeki',
+        CopySource: `tokimeki/${req.thumbnailPath}`,
+        Key: thumbnailPath,
+      });
+      await r2.send(copyCommand);
+
+      const deleteCommand = new DeleteObjectCommand({
+        Bucket: 'tokimeki',
+        Key: req.thumbnailPath,
+      });
+      await r2.send(deleteCommand);
+    } catch (_) {
+      throw new ConnectError('Internal Error', Code.Internal);
+    }
+  }
+
   const character = await prisma.character.create({
     data: {
       name: req.name,
-      thumbnailPath: req.thumbnailPath,
+      thumbnailPath,
       userId,
     },
   });
 
   // thumbnailPathが存在する場合、signed urlを発行する
+  let thumbnailUrl = '';
+  if (character.thumbnailPath !== '') {
+    thumbnailUrl = await getSignedUrl(
+      r2,
+      new GetObjectCommand({
+        Bucket: 'tokimeki',
+        Key: character.thumbnailPath,
+      }),
+      { expiresIn: 3600 * 24 },
+    );
+  }
 
   return {
     character: {
       id: character.id,
       name: character.name,
-      thumbnailPath: character.thumbnailPath,
+      thumbnailUrl,
     },
   } as CreateCharacterResponse;
 };
@@ -96,6 +142,10 @@ export const getCharacter: (
   if (!prisma) {
     throw new ConnectError('Internal Error', Code.Internal);
   }
+  const r2 = ctx.values.get(contextKeyR2);
+  if (!r2) {
+    throw new ConnectError('Internal Error', Code.Internal);
+  }
 
   const character = await prisma.character.findFirstOrThrow({
     where: {
@@ -107,13 +157,23 @@ export const getCharacter: (
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
 
-  // thumbnailPathが存在する場合、signed urlを発行する
+  let thumbnailUrl = '';
+  if (character.thumbnailPath !== '') {
+    thumbnailUrl = await getSignedUrl(
+      r2,
+      new GetObjectCommand({
+        Bucket: 'tokimeki',
+        Key: character.thumbnailPath,
+      }),
+      { expiresIn: 3600 * 24 },
+    );
+  }
 
   return {
     character: {
       id: character.id,
       name: character.name,
-      thumbnailPath: character.thumbnailPath,
+      thumbnailUrl,
     },
   } as GetCharacterResponse;
 };
@@ -130,6 +190,10 @@ export const listCharacters: (
   if (!prisma) {
     throw new ConnectError('Internal Error', Code.Internal);
   }
+  const r2 = ctx.values.get(contextKeyR2);
+  if (!r2) {
+    throw new ConnectError('Internal Error', Code.Internal);
+  }
 
   const characters = await prisma.character.findMany({
     where: {
@@ -137,13 +201,27 @@ export const listCharacters: (
     },
   });
 
-  // thumbnailPathが存在する場合、signed urlを発行する
+  const results: Partial<Character>[] = await Promise.all(
+    characters.map(async (character) => {
+      let thumbnailUrl = '';
+      if (character.thumbnailPath !== '') {
+        thumbnailUrl = await getSignedUrl(
+          r2,
+          new GetObjectCommand({
+            Bucket: 'tokimeki',
+            Key: character.thumbnailPath,
+          }),
+          { expiresIn: 3600 * 24 },
+        );
+      }
 
-  const results: Partial<Character>[] = characters.map((character) => ({
-    id: character.id,
-    name: character.name,
-    thumbnailPath: character.thumbnailPath,
-  }));
+      return {
+        id: character.id,
+        name: character.name,
+        thumbnailUrl,
+      };
+    }),
+  );
 
   return {
     characters: results,
