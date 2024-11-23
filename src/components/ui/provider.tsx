@@ -8,7 +8,7 @@ export function Provider(props: ColorModeProviderProps) {
   return (
     <JotaiProvider>
       <ChakraProvider value={defaultSystem}>
-        <ColorModeProvider {...props} />
+        <ColorModeProvider forcedTheme="light" {...props} />
       </ChakraProvider>
     </JotaiProvider>
   );

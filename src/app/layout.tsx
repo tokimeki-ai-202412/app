@@ -1,3 +1,4 @@
+import { Navigation } from '@/app/navigation.tsx';
 import { Provider } from '@/components/ui/provider';
 import type { Metadata } from 'next';
 import type { ReactElement, ReactNode } from 'react';
@@ -16,7 +17,10 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning={true}>
       <body>
-        <Provider>{children}</Provider>
+        <Provider>
+          <Navigation />
+          {children}
+        </Provider>
       </body>
     </html>
   );
