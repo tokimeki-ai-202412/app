@@ -64,20 +64,26 @@ export default function Page(): ReactElement {
       if (!uploadResp.ok) {
         throw new Error('file upload failed');
       }
-      // creaate character
-      const character = await API.Character.createCharacter({
-        name,
+      // create character
+      const { character } = await API.Character.createCharacter({
+        name: name,
         thumbnailPath: path,
       });
+      if (!character) throw new Error('api error');
       // create job
-      const artifact = await API.Artifact.createArtifact({
+      const { artifact } = await API.Artifact.createArtifact({
         input: {
           imagePath: path,
         },
         characterId: character.id,
       });
+      if (!artifact) throw new Error('api error');
 
       console.log(artifact);
+
+      setThumbnail('/sample.png');
+      setName('新しいキャラクター');
+      setFile(null);
     } catch (e) {
       console.log(e);
     }
@@ -176,6 +182,7 @@ export default function Page(): ReactElement {
                 <Button
                   w="full"
                   size="2xl"
+                  loading={loading}
                   disabled={file === null || name === '' || loading}
                   onClick={createJob}
                 >
