@@ -24,10 +24,11 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { createListCollection } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 
 const models = createListCollection({
-  items: [{ label: 'First_Model_512px', value: 'First_Model_512px' }],
+  items: [{ label: '（デモ用）First_Model_512px', value: 'First_Model_512px' }],
 });
 
 export default function Page(): ReactElement {
@@ -44,6 +45,8 @@ export default function Page(): ReactElement {
       setFile(file);
     }
   };
+
+  const router = useRouter();
 
   async function createJob(): Promise<void> {
     setLoading(true);
@@ -79,11 +82,11 @@ export default function Page(): ReactElement {
       });
       if (!artifact) throw new Error('api error');
 
-      console.log(artifact);
-
       setThumbnail('/sample.png');
       setName('新しいキャラクター');
       setFile(null);
+
+      router.push(`/characters/${character.id}`);
     } catch (e) {
       console.log(e);
     }
