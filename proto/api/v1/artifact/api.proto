@@ -22,6 +22,7 @@ message GetArtifactResponse {
 
 message CreateArtifactRequest {
   model.v1.ArtifactInput input = 1;
+  string character_id = 2;
 }
 
 message CreateArtifactResponse {
