@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button.tsx';
 import { useListCharacters } from '@/states/hooks/character.ts';
 import {
   Container,
+  Flex,
   Grid,
   GridItem,
   Heading,
@@ -20,6 +21,11 @@ export default function Page(): ReactElement {
 
   return (
     <Container maxW={{ base: '1024px' }}>
+      <Flex justify="flex-end">
+        <Link href="/characters/new">
+          <Button>新しいキャラクターを追加</Button>
+        </Link>
+      </Flex>
       <SimpleGrid my={8} columns={{ base: 1, xl: 2 }} gap={8}>
         {characters ? (
           characters.map((character) => (
