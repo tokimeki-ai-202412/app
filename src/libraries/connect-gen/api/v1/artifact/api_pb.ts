@@ -164,6 +164,11 @@ export class CreateArtifactRequest extends Message<CreateArtifactRequest> {
    */
   input?: ArtifactInput;
 
+  /**
+   * @generated from field: string character_id = 2;
+   */
+  characterId = "";
+
   constructor(data?: PartialMessage<CreateArtifactRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -173,6 +178,7 @@ export class CreateArtifactRequest extends Message<CreateArtifactRequest> {
   static readonly typeName = "api.v1.artifact.CreateArtifactRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "input", kind: "message", T: ArtifactInput },
+    { no: 2, name: "character_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateArtifactRequest {
