@@ -1,4 +1,8 @@
-import { contextKeyPrisma, contextKeyR2 } from '@/server/context';
+import {
+  contextKeyPrisma,
+  contextKeyR2,
+  contextKeyRunpod,
+} from '@/server/context';
 import { Router } from '@/server/router';
 import { S3Client } from '@aws-sdk/client-s3';
 import { getRequestContext } from '@cloudflare/next-on-pages';
@@ -7,6 +11,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
 import { connect } from '@tidbcloud/serverless';
 import type { NextRequest } from 'next/server';
+import runpodSdk from 'runpod-sdk';
 
 export const runtime = 'edge';
 
@@ -37,14 +42,29 @@ function initR2(): S3Client {
   });
 }
 
+function initRunpod(): {
+  Hi3DFirstModel512: any;
+} {
+  const runpod = runpodSdk(getRequestContext().env.RUNPOD_API_TOKEN);
+  const endpoint = runpod.endpoint(
+    getRequestContext().env.RUNPOD_ENDPOINT_HI3D_FIRST_MODEL_512,
+  );
+
+  return {
+    Hi3DFirstModel512: endpoint,
+  };
+}
+
 export function POST(req: NextRequest) {
   const prisma = initPrismaClient();
   const r2 = initR2();
+  const runpod = initRunpod();
 
   // Create context values
   const contextValues = createContextValues();
   contextValues.set(contextKeyPrisma, prisma);
   contextValues.set(contextKeyR2, r2);
+  contextValues.set(contextKeyRunpod, runpod);
 
   // handle request
   const router = new Router(contextValues);

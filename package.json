@@ -39,7 +39,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "^5.3.0",
-    "rfc4648": "^1.5.3"
+    "rfc4648": "^1.5.3",
+    "runpod-sdk": "^1.0.7"
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.5",

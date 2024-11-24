@@ -7,4 +7,6 @@ interface CloudflareEnv {
 	OIDC_CLIENT_REDIRECT_URI: string;
 	R2_ACCESS_KEY_ID: string;
 	R2_SECRET_ACCESS_KEY: string;
+	RUNPOD_API_TOKEN: string;
+	RUNPOD_ENDPOINT_HI3D_FIRST_MODEL_512: string;
 }

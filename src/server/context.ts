@@ -8,4 +8,11 @@ export const contextKeyPrisma = createContextKey<PrismaClient | undefined>(
 
 export const contextKeyR2 = createContextKey<S3Client | undefined>(undefined);
 
+export const contextKeyRunpod = createContextKey<
+  | {
+      Hi3DFirstModel512: any;
+    }
+  | undefined
+>(undefined);
+
 export const contextKeyUserId = createContextKey<string | undefined>(undefined);
