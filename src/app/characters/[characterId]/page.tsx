@@ -4,6 +4,8 @@ import { useListArtifact } from '@/states/hooks/artifact.ts';
 import { useGetCharacter } from '@/states/hooks/character.ts';
 import type { ReactElement } from 'react';
 
+export const runtime = 'edge';
+
 type Props = {
   params: {
     characterId: string;
