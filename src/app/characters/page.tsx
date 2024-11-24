@@ -12,6 +12,7 @@ import {
   Spacer,
   VStack,
 } from '@chakra-ui/react';
+import Link from 'next/link';
 import type { ReactElement } from 'react';
 
 export default function Page(): ReactElement {
@@ -48,7 +49,9 @@ export default function Page(): ReactElement {
                 <VStack align="flex-start" h="full">
                   <Heading>{character.name}</Heading>
                   <Spacer />
-                  <Button>詳細を見る</Button>
+                  <Link href={`/characters/${character.id}`}>
+                    <Button>詳細を見る</Button>
+                  </Link>
                 </VStack>
               </GridItem>
             </Grid>
