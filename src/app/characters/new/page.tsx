@@ -53,7 +53,7 @@ export default function Page(): ReactElement {
       const { url, path } = await API.Storage.createUploadUrl({
         length: file.size,
       });
-
+      // upload input image
       const uploadResp = await fetch(url, {
         method: 'PUT',
         body: file,
@@ -64,13 +64,20 @@ export default function Page(): ReactElement {
       if (!uploadResp.ok) {
         throw new Error('file upload failed');
       }
-
+      // creaate character
       const character = await API.Character.createCharacter({
         name,
         thumbnailPath: path,
       });
+      // create job
+      const artifact = await API.Artifact.createArtifact({
+        input: {
+          imagePath: path,
+        },
+        characterId: character.id,
+      });
 
-      console.log(character);
+      console.log(artifact);
     } catch (e) {
       console.log(e);
     }

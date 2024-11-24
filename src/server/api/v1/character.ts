@@ -57,12 +57,6 @@ export const createCharacter: (
         Key: thumbnailPath,
       });
       await r2.send(copyCommand);
-
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: 'tokimeki',
-        Key: req.thumbnailPath,
-      });
-      await r2.send(deleteCommand);
     } catch (_) {
       throw new ConnectError('Internal Error', Code.Internal);
     }
