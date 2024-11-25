@@ -2,10 +2,10 @@ import type { Artifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
 import { getArtifactAtom, listArtifactAtom } from '@/states/atoms/artifact.ts';
 import {
   getArtifactSelector,
-  listArtifactSelector,
+  listArtifactSelectorWithRefresh,
 } from '@/states/selectors/artifact.ts';
 import type { Message } from '@bufbuild/protobuf';
-import { useAtom } from 'jotai/index';
+import { useAtom } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { useEffect, useState } from 'react';
 
@@ -37,9 +37,10 @@ export function useGetArtifact(id: string): {
 export function useListArtifact(id: string): {
   loading: boolean;
   artifacts: Omit<Artifact, keyof Message>[] | null;
+  refresh: () => void;
 } {
   const [artifacts, setArtifacts] = useAtom(listArtifactAtom(id));
-  const [value] = useAtom(loadable(listArtifactSelector(id)));
+  const [value, refresh] = useAtom(listArtifactSelectorWithRefresh(id));
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -56,5 +57,5 @@ export function useListArtifact(id: string): {
     }
   }, [value.state]);
 
-  return { loading, artifacts };
+  return { loading, artifacts, refresh };
 }
