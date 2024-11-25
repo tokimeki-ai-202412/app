@@ -7,16 +7,16 @@ import { Router } from '@/server/router';
 import { S3Client } from '@aws-sdk/client-s3';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { createContextValues } from '@connectrpc/connect';
+import { Client } from '@planetscale/database';
+import { PrismaPlanetScale } from '@prisma/adapter-planetscale';
 import { PrismaClient } from '@prisma/client';
-import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
-import { connect } from '@tidbcloud/serverless';
 import type { NextRequest } from 'next/server';
 import runpodSdk from 'runpod-sdk';
 
 export const runtime = 'edge';
 
 function initPrismaClient(): PrismaClient {
-  const connection = connect({
+  const client = new Client({
     url: getRequestContext().env.DATABASE_URL,
     fetch: (url, init) => {
       if (init) {
@@ -26,7 +26,7 @@ function initPrismaClient(): PrismaClient {
       return fetch(url, init);
     },
   });
-  const adapter = new PrismaTiDBCloud(connection);
+  const adapter = new PrismaPlanetScale(client);
   // @ts-ignore
   return new PrismaClient({ adapter });
 }

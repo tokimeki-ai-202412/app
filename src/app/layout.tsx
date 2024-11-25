@@ -5,6 +5,9 @@ import type { ReactElement, ReactNode } from 'react';
 
 export const metadata: Metadata = {
   title: 'tokimeki.ai',
+  openGraph: {
+    images: '/top.png',
+  },
 };
 
 type RootLayoutProps = {
