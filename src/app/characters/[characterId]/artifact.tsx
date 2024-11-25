@@ -60,9 +60,16 @@ export function Artifact({ artifact, characterId }: Props): ReactElement {
           artifact.objectUrls.map((url) => {
             return (
               <GridItem key={url} w="full">
-                <AspectRatio ratio={1}>
-                  <Image src={url} />
-                </AspectRatio>
+                <Box
+                  borderWidth="1px"
+                  borderColor="blackAlpha.100"
+                  borderRadius="8px"
+                  bg="blackAlpha.50"
+                >
+                  <AspectRatio ratio={1}>
+                    <Image src={url} />
+                  </AspectRatio>
+                </Box>
               </GridItem>
             );
           })}
