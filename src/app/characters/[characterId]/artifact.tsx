@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button.tsx';
 import type { Artifact as TypeArtifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
+import { useListArtifact } from '@/states/hooks/artifact.ts';
 import type { Message } from '@bufbuild/protobuf';
 import {
   AspectRatio,
@@ -12,22 +12,46 @@ import {
   SimpleGrid,
   Spinner,
   Text,
+  VStack,
 } from '@chakra-ui/react';
-import { ArtifactStatus } from '@prisma/client';
-import type { ReactElement } from 'react';
+import { type ReactElement, useEffect } from 'react';
 
 type Props = {
   artifact: Omit<TypeArtifact, keyof Message>;
+  characterId: string;
 };
 
-export function Artifact({ artifact }: Props): ReactElement {
+export function Artifact({ artifact, characterId }: Props): ReactElement {
+  const { refresh } = useListArtifact(characterId);
+
+  useEffect(() => {
+    let intervalId: any;
+
+    if (artifact.status === 'QUQUED') {
+      intervalId = setInterval(() => {
+        refresh();
+      }, 10000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [artifact.status, refresh]);
+
   return (
     <Box>
-      {artifact.status === ArtifactStatus.QUQUED ? (
-        <Flex align="center" gap={4}>
-          <Spinner size="lg" color="pink" borderWidth="4px" />
-          <Text>処理の順番待ち</Text>
-        </Flex>
+      {artifact.status === 'QUQUED' ? (
+        <VStack w="full" py={8} gap={4}>
+          <Spinner
+            size="lg"
+            color="orange.300"
+            animationDuration="1.6s"
+            borderWidth="4px"
+          />
+          <Text>処理の順番待ち中</Text>
+        </VStack>
       ) : (
         <></>
       )}

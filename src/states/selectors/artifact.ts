@@ -1,7 +1,14 @@
 import { API } from '@/libraries/connect-client';
 import deepEqual from 'fast-deep-equal';
+import { atom } from 'jotai';
 import { atomWithCache } from 'jotai-cache';
-import { atomFamily } from 'jotai/utils';
+import {
+  atomFamily,
+  atomWithDefault,
+  atomWithRefresh,
+  atomWithReset,
+  loadable,
+} from 'jotai/utils';
 
 export const getArtifactSelector = atomFamily(
   (artifactId: string) =>
@@ -15,10 +22,18 @@ export const getArtifactSelector = atomFamily(
 
 export const listArtifactSelector = atomFamily(
   (characterId: string) =>
-    atomWithCache(async () => {
+    atomWithRefresh(async () => {
       const res = await API.Artifact.listArtifacts({ characterId });
       if (!res.artifacts) throw new Error('api internal error');
       return res.artifacts;
     }),
   deepEqual,
+);
+
+export const listArtifactSelectorWithRefresh = atomFamily(
+  (characterId: string) =>
+    atom(
+      (get) => get(loadable(listArtifactSelector(characterId))),
+      (get, set) => set(listArtifactSelector(characterId)),
+    ),
 );

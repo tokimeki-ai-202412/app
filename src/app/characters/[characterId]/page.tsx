@@ -85,7 +85,13 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
               <Tabs.Content value="artifacts">
                 {artifacts
                   ? artifacts.map((artifact) => {
-                      return <Artifact key={artifact.id} artifact={artifact} />;
+                      return (
+                        <Artifact
+                          key={artifact.id}
+                          characterId={characterId}
+                          artifact={artifact}
+                        />
+                      );
                     })
                   : ''}
               </Tabs.Content>
