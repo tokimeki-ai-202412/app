@@ -12,6 +12,7 @@
     "generate:prisma": "npx prisma generate",
     "generate:proto": "npx buf generate",
     "deploy": "yarn build:pages && wrangler pages deploy --branch develop",
+    "deploy:production": "yarn build:pages && wrangler pages deploy --branch production",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
   },
   "dependencies": {
