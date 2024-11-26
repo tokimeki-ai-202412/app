@@ -23,12 +23,12 @@ export default function Page(): ReactElement {
       <Container maxW={{ base: '768px' }}>
         <Box my={8}>
           <Heading fontSize="48px" color="blackAlpha.700">
-            tokimeki.ai
+            TOKIMEKI
           </Heading>
         </Box>
         <Box my={8}>
           <Text>
-            tokimeki.aiは1枚のイラストからキャラクターをあらゆる角度から見た様子を生成する、キャラデザイン支援ツールです。
+            TOKIMEKIは1枚のイラストからキャラクターをあらゆる角度から見た様子を生成する、キャラデザイン支援ツールです。
           </Text>
         </Box>
         <Box
