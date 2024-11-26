@@ -1,3 +1,4 @@
+import { CreateRunpod, type CreateRunpodType } from '@/libraries/runpod';
 import {
   contextKeyPrisma,
   contextKeyR2,
@@ -11,7 +12,6 @@ import { Client } from '@planetscale/database';
 import { PrismaPlanetScale } from '@prisma/adapter-planetscale';
 import { PrismaClient } from '@prisma/client';
 import type { NextRequest } from 'next/server';
-import runpodSdk from 'runpod-sdk';
 
 export const runtime = 'edge';
 
@@ -42,17 +42,11 @@ function initR2(): S3Client {
   });
 }
 
-function initRunpod(): {
-  Hi3DFirstModel512: any;
-} {
-  const runpod = runpodSdk(getRequestContext().env.RUNPOD_API_TOKEN);
-  const endpoint = runpod.endpoint(
+function initRunpod(): CreateRunpodType {
+  return CreateRunpod(
+    getRequestContext().env.RUNPOD_API_TOKEN,
     getRequestContext().env.RUNPOD_ENDPOINT_HI3D_FIRST_MODEL_512,
   );
-
-  return {
-    Hi3DFirstModel512: endpoint,
-  };
 }
 
 export function POST(req: NextRequest) {
