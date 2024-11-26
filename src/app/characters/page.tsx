@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button.tsx';
 import { useListCharacters } from '@/states/hooks/character.ts';
 import {
+  AspectRatio,
   Container,
   Flex,
   Grid,
@@ -45,11 +46,13 @@ export default function Page(): ReactElement {
                 borderColor="blackAlpha.50"
                 borderRadius="8px"
               >
-                <Image
-                  src={character.thumbnailUrl}
-                  userSelect="none"
-                  pointerEvents="none"
-                />
+                <AspectRatio ratio={1}>
+                  <Image
+                    src={character.thumbnailUrl}
+                    userSelect="none"
+                    pointerEvents="none"
+                  />
+                </AspectRatio>
               </GridItem>
               <GridItem colSpan={3}>
                 <VStack align="flex-start" h="full">
