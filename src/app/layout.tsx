@@ -5,6 +5,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 export const metadata: Metadata = {
   title: 'tokimeki.ai',
+  metadataBase: new URL('https://tokimeki.ai'),
   openGraph: {
     images: '/top.png',
   },
