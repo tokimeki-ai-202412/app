@@ -95,16 +95,18 @@ export const cancelArtifact: (
     artifact.status === ArtifactStatus.QUQUED ||
     artifact.status === ArtifactStatus.GENERATING
   ) {
-    await runpod.Hi3DFirstModel512.cancel(artifact.jobId);
+    if (artifact.jobId) {
+      await runpod.cancelJob(artifact.jobId);
 
-    artifact = await prisma.artifact.update({
-      where: {
-        id: req.artifactId,
-      },
-      data: {
-        status: ArtifactStatus.CANCELED,
-      },
-    });
+      artifact = await prisma.artifact.update({
+        where: {
+          id: req.artifactId,
+        },
+        data: {
+          status: ArtifactStatus.CANCELED,
+        },
+      });
+    }
   }
 
   return {
@@ -172,9 +174,11 @@ export const createArtifact: (
         image_path: req.input.imagePath,
         artifact_id: artifact.id,
       },
+      webhook: `https://tokimeki.ai/api/webhook/${artifact.id}`,
     };
-    const result = await runpod.Hi3DFirstModel512.run(input);
-    jobId = result.id;
+
+    const { id } = await runpod.createJob(input);
+    jobId = id;
   } catch (_) {
     throw new ConnectError('Internal Error', Code.Internal);
   }
