@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button.tsx';
 import { useListCharacters } from '@/states/hooks/character.ts';
 import {
   AspectRatio,
+  Box,
   Container,
   Flex,
-  Grid,
-  GridItem,
+  HStack,
   Heading,
   Image,
   SimpleGrid,
@@ -30,40 +30,45 @@ export default function Page(): ReactElement {
       <SimpleGrid my={8} columns={{ base: 1, xl: 2 }} gap={8}>
         {characters ? (
           characters.map((character) => (
-            <Grid
-              key={character.id}
-              p={8}
-              borderWidth="1px"
-              borderColor="blackAlpha.100"
-              borderRadius="8px"
-              templateColumns="repeat(5, 1fr)"
-              gap={8}
-            >
-              <GridItem
-                colSpan={2}
-                boxSize="160px"
+            <HStack w="full" key={character.id} gap={4}>
+              <Box
                 borderWidth="1px"
                 borderColor="blackAlpha.50"
                 borderRadius="8px"
               >
-                <AspectRatio ratio={1}>
-                  <Image
-                    src={character.thumbnailUrl}
-                    userSelect="none"
-                    pointerEvents="none"
-                  />
-                </AspectRatio>
-              </GridItem>
-              <GridItem colSpan={3}>
-                <VStack align="flex-start" h="full">
-                  <Heading>{character.name}</Heading>
+                <Link href={`/characters/${character.id}`}>
+                  <AspectRatio
+                    boxSize={{ base: '128px', lg: '160px' }}
+                    ratio={1}
+                  >
+                    <Image
+                      src={character.thumbnailUrl}
+                      userSelect="none"
+                      pointerEvents="none"
+                    />
+                  </AspectRatio>
+                </Link>
+              </Box>
+              <Box w="full">
+                <VStack w="full" align="flex-start" h="full">
+                  <Heading color="blackAlpha.700">{character.name}</Heading>
                   <Spacer />
-                  <Link href={`/characters/${character.id}`}>
-                    <Button>詳細を見る</Button>
-                  </Link>
+                  <Box w="full">
+                    <Link href={`/characters/${character.id}`}>
+                      <Button
+                        color="blackAlpha.700"
+                        bg="transparent"
+                        borderWidth="1px"
+                        borderColor="blackAlpha.100"
+                        borderRadius="8px"
+                      >
+                        詳細を見る
+                      </Button>
+                    </Link>
+                  </Box>
                 </VStack>
-              </GridItem>
-            </Grid>
+              </Box>
+            </HStack>
           ))
         ) : (
           <></>
