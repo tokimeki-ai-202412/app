@@ -97,7 +97,11 @@ export default function Page(): ReactElement {
     <Container px={8} py={4} maxW={{ base: '1024px' }}>
       <SimpleGrid pb={8} gap={4}>
         <GridItem>
-          <Heading fontSize="32px" color="blackAlpha.800" textAlign="center">
+          <Heading
+            fontSize={{ base: '24px', lg: '32px' }}
+            color="blackAlpha.700"
+            textAlign="center"
+          >
             新しいキャラクターを追加
           </Heading>
         </GridItem>
@@ -149,6 +153,10 @@ export default function Page(): ReactElement {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="キャラクター名を入力"
+                  _focus={{
+                    borderColor: '#f0acac',
+                    outline: '1px solid #f0acac',
+                  }}
                 />
               </GridItem>
               <GridItem>

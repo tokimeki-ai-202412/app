@@ -19,6 +19,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const { loading, disabled, loadingText, children, ...rest } = props;
     return (
       <ChakraButton
+        bg="#f0acac"
         fontWeight="bold"
         borderRadius="8px"
         disabled={loading || disabled}
