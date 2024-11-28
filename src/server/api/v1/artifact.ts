@@ -146,6 +146,20 @@ export const createArtifact: (
     throw new ConnectError('Invalid Argument', Code.InvalidArgument);
   }
 
+  // 処理中のartifactが複数ある場合はブロック
+  const queuedCount = await prisma.artifact.count({
+    where: {
+      userId,
+      OR: [
+        { status: ArtifactStatus.QUQUED },
+        { status: ArtifactStatus.GENERATING },
+      ],
+    },
+  });
+  if (queuedCount > 3) {
+    throw new ConnectError('You have too many queue.', Code.Unknown);
+  }
+
   // check temp file
   try {
     const headCommand = new HeadObjectCommand({
