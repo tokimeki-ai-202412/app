@@ -11,12 +11,7 @@ import type {
   ListArtifactsResponse,
 } from '@/libraries/connect-gen/api/v1/artifact/api_pb';
 import type { Artifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
-import {
-  contextKeyPrisma,
-  contextKeyR2,
-  contextKeyRunpod,
-  contextKeyUserId,
-} from '@/server/context.ts';
+import { GetProps } from '@/server/props.ts';
 import {
   GetObjectCommand,
   HeadObjectCommand,
@@ -69,51 +64,48 @@ export const cancelArtifact: (
   req: CancelArtifactRequest,
   ctx: HandlerContext,
 ) => Promise<CancelArtifactResponse> = async (req, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma, runpod } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const runpod = ctx.values.get(contextKeyRunpod);
-  if (!runpod) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
-  let artifact = await prisma.artifact.findFirstOrThrow({
-    where: {
-      id: req.artifactId,
-    },
-  });
-  if (artifact.userId !== userId) {
-    throw new ConnectError('Unauthenticated', Code.Unauthenticated);
-  }
+  // Get artifact
+  let artifact = await prisma.artifact
+    .findFirstOrThrow({
+      where: {
+        id: req.artifactId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Artifact not found', Code.NotFound);
+    });
 
+  // Check artifact is active
   if (
     artifact.status === ArtifactStatus.QUQUED ||
     artifact.status === ArtifactStatus.GENERATING
   ) {
-    if (artifact.jobId) {
-      await runpod.cancelJob(artifact.jobId);
-
-      artifact = await prisma.artifact.update({
-        where: {
-          id: req.artifactId,
-        },
-        data: {
-          status: ArtifactStatus.CANCELED,
-        },
-      });
+    if (!artifact.jobId) {
+      throw new ConnectError('Broken artifact', Code.PermissionDenied);
     }
+
+    await runpod.cancelJob(artifact.jobId);
+
+    artifact = await prisma.artifact.update({
+      where: {
+        id: req.artifactId,
+      },
+      data: {
+        status: ArtifactStatus.CANCELED,
+      },
+    });
   }
 
   return {
     artifact: {
       id: artifact.id,
       status: artifact.status,
-      objectUrls: [] as string[],
     },
   } as CancelArtifactResponse;
 };
@@ -122,31 +114,20 @@ export const createArtifact: (
   req: CreateArtifactRequest,
   ctx: HandlerContext,
 ) => Promise<CreateArtifactResponse> = async (req, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma, r2, runpod, bucketName } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const r2 = ctx.values.get(contextKeyR2);
-  if (!r2) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const runpod = ctx.values.get(contextKeyRunpod);
-  if (!runpod) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
+  // Validate request
   if (!req.input) {
-    throw new ConnectError('Invalid Argument', Code.InvalidArgument);
+    throw new ConnectError('Invalid input.', Code.InvalidArgument);
   }
   if (!req.input.imagePath.startsWith('temporary/')) {
-    throw new ConnectError('Invalid Argument', Code.InvalidArgument);
+    throw new ConnectError('Invalid image.', Code.InvalidArgument);
   }
 
-  // 処理中のartifactが複数ある場合はブロック
+  // Rate limiting
   const queuedCount = await prisma.artifact.count({
     where: {
       userId,
@@ -160,18 +141,16 @@ export const createArtifact: (
     throw new ConnectError('You have too many queue.', Code.Unknown);
   }
 
-  // check temp file
-  try {
-    const headCommand = new HeadObjectCommand({
-      Bucket: 'tokimeki',
-      Key: req.input.imagePath,
-    });
-    await r2.send(headCommand);
-  } catch (_) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
+  // Validate temporary file
+  const headCommand = new HeadObjectCommand({
+    Bucket: bucketName,
+    Key: req.input.imagePath,
+  });
+  await r2.send(headCommand).catch(() => {
+    throw new ConnectError('Invalid input image.', Code.InvalidArgument);
+  });
 
-  // create temporary artifact
+  // Create temporary artifact
   const artifact = await prisma.artifact.create({
     data: {
       inputPath: req.input.imagePath,
@@ -180,24 +159,19 @@ export const createArtifact: (
     },
   });
 
-  // create worker job
-  let jobId = '';
-  try {
-    const input = {
-      input: {
-        image_path: req.input.imagePath,
-        artifact_id: artifact.id,
-      },
-      webhook: `https://tokimeki.ai/api/webhook/${artifact.id}`,
-    };
-
-    const { id } = await runpod.createJob(input);
-    jobId = id;
-  } catch (_) {
+  // Create worker job
+  const input = {
+    input: {
+      image_path: req.input.imagePath,
+      artifact_id: artifact.id,
+    },
+    webhook: `https://tokimeki.ai/api/webhook/${artifact.id}`,
+  };
+  const { id: jobId } = await runpod.createJob(input).catch(() => {
     throw new ConnectError('Internal Error', Code.Internal);
-  }
+  });
 
-  // update artifact
+  // Update artifact
   const latestArtifact = await prisma.artifact.update({
     where: {
       id: artifact.id,
@@ -228,35 +202,29 @@ export const getArtifact: (
   req: GetArtifactRequest,
   ctx: HandlerContext,
 ) => Promise<GetArtifactResponse> = async (req, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma, r2 } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const r2 = ctx.values.get(contextKeyR2);
-  if (!r2) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
-  const artifact = await prisma.artifact.findFirstOrThrow({
-    where: {
-      id: req.artifactId,
-      userId,
-    },
+  // Get artifact
+  const artifact = await prisma.artifact
+    .findFirstOrThrow({
+      where: {
+        id: req.artifactId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Artifact not found', Code.NotFound);
+    });
+
+  // List images
+  let objectUrls: string[] = [];
+  objectUrls = await createObjectUrls(r2, artifact).catch(() => {
+    throw new ConnectError('Failed to generate object urls.', Code.Internal);
   });
 
-  // list images
-  let objectUrls: string[] = [];
-  try {
-    objectUrls = await createObjectUrls(r2, artifact);
-  } catch (_) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-
-  // R2からartifact idのフォルダの中身をリストにしてすべてのファイルに署名する実装を追加する
   return {
     artifact: {
       id: artifact.id,
@@ -270,36 +238,36 @@ export const listArtifacts: (
   req: ListArtifactsRequest,
   ctx: HandlerContext,
 ) => Promise<ListArtifactsResponse> = async (req, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma, r2 } = GetProps(ctx);
+
+  // Auth required
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const r2 = ctx.values.get(contextKeyR2);
-  if (!r2) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
-  const artifacts = await prisma.artifact.findMany({
-    where: {
-      characterId: req.characterId,
-      userId,
-    },
-  });
+  /// Get artifacts
+  const artifacts = await prisma.artifact
+    .findMany({
+      where: {
+        characterId: req.characterId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Failed to fetch artifacts.', Code.Internal);
+    });
 
+  // Prepare results
   const results: Partial<Artifact>[] = await Promise.all(
     artifacts.map(async (artifact) => {
-      // list images
+      // List images
       let objectUrls: string[] = [];
-      try {
-        objectUrls = await createObjectUrls(r2, artifact);
-      } catch (_) {
-        throw new ConnectError('Internal Error', Code.Internal);
-      }
-
+      objectUrls = await createObjectUrls(r2, artifact).catch(() => {
+        throw new ConnectError(
+          'Failed to generate object urls.',
+          Code.Internal,
+        );
+      });
       return {
         id: artifact.id,
         status: artifact.status || 'ERROR',

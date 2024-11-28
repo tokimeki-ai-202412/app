@@ -16,71 +16,71 @@ import {
   contextKeyR2,
   contextKeyUserId,
 } from '@/server/context.ts';
+import { GetProps } from '@/server/props.ts';
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Code, ConnectError, type HandlerContext } from '@connectrpc/connect';
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const createCharacter: (
   req: CreateCharacterRequest,
   ctx: HandlerContext,
 ) => Promise<CreateCharacterResponse> = async (req, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma, r2, generateDownloadUrl } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const r2 = ctx.values.get(contextKeyR2);
-  if (!r2) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
+  // Validate request
   if (req.name === '') {
-    throw new ConnectError('Invalid Argument', Code.InvalidArgument);
+    throw new ConnectError('Name required.', Code.InvalidArgument);
+  }
+  if (!req.thumbnailPath.startsWith('temporary/')) {
+    throw new ConnectError('Thumbnail required.', Code.InvalidArgument);
+  }
+  // Check temporary file is valid
+  try {
+    const headCommand = new HeadObjectCommand({
+      Bucket: 'tokimeki',
+      Key: req.thumbnailPath,
+    });
+    await r2.send(headCommand);
+  } catch (_) {
+    throw new ConnectError('Invalid thumbnail.', Code.InvalidArgument);
   }
 
-  let thumbnailPath = '';
-  if (req.thumbnailPath.startsWith('temporary/')) {
-    try {
-      thumbnailPath = `characters/thumbnail/${crypto.randomUUID()}`;
-      const copyCommand = new CopyObjectCommand({
-        Bucket: 'tokimeki',
-        CopySource: `tokimeki/${req.thumbnailPath}`,
-        Key: thumbnailPath,
-      });
-      await r2.send(copyCommand);
-    } catch (_) {
-      throw new ConnectError('Internal Error', Code.Internal);
-    }
+  // Activate thumbnail
+  try {
+    const thumbnailPath = `characters/thumbnail/${crypto.randomUUID()}`;
+    const copyCommand = new CopyObjectCommand({
+      Bucket: 'tokimeki',
+      CopySource: `tokimeki/${req.thumbnailPath}`,
+      Key: thumbnailPath,
+    });
+    await r2.send(copyCommand);
+
+    req.thumbnailPath = thumbnailPath;
+  } catch (_) {
+    throw new ConnectError('Internal Error', Code.Internal);
   }
 
+  // Create character
   const character = await prisma.character.create({
     data: {
       name: req.name,
-      thumbnailPath,
+      thumbnailPath: req.thumbnailPath,
       userId,
     },
   });
 
-  // thumbnailPathが存在する場合、signed urlを発行する
+  // Generate thumbnail url
   let thumbnailUrl = '';
   if (character.thumbnailPath !== '') {
-    thumbnailUrl = await getSignedUrl(
-      r2,
-      new GetObjectCommand({
-        Bucket: 'tokimeki',
-        Key: character.thumbnailPath,
-      }),
-      { expiresIn: 3600 * 24 },
-    );
+    thumbnailUrl = await generateDownloadUrl(r2, character.thumbnailPath);
   }
 
   return {
@@ -96,28 +96,27 @@ export const deleteCharacter: (
   req: DeleteCharacterRequest,
   ctx: HandlerContext,
 ) => Promise<DeleteCharacterResponse> = async (req, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
-  const character = await prisma.character.findFirstOrThrow({
-    where: {
-      id: req.characterId,
-    },
-  });
+  // Get character
+  const character = await prisma.character
+    .findFirstOrThrow({
+      where: {
+        id: req.characterId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Character not found.', Code.NotFound);
+    });
 
-  if (character.userId !== userId) {
-    throw new ConnectError('Unauthenticated', Code.Unauthenticated);
-  }
-
+  // Delete character
   await prisma.character.delete({
     where: {
-      id: req.characterId,
+      id: character.id,
     },
   });
 
@@ -128,39 +127,27 @@ export const getCharacter: (
   req: GetCharacterRequest,
   ctx: HandlerContext,
 ) => Promise<GetCharacterResponse> = async (req, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma, r2, generateDownloadUrl } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const r2 = ctx.values.get(contextKeyR2);
-  if (!r2) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
-  const character = await prisma.character.findFirstOrThrow({
-    where: {
-      id: req.characterId,
-    },
-  });
+  // Get character
+  const character = await prisma.character
+    .findFirstOrThrow({
+      where: {
+        id: req.characterId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Character not found.', Code.NotFound);
+    });
 
-  if (character.userId !== userId) {
-    throw new ConnectError('Unauthenticated', Code.Unauthenticated);
-  }
-
+  // Generate thumbnail url
   let thumbnailUrl = '';
   if (character.thumbnailPath !== '') {
-    thumbnailUrl = await getSignedUrl(
-      r2,
-      new GetObjectCommand({
-        Bucket: 'tokimeki',
-        Key: character.thumbnailPath,
-      }),
-      { expiresIn: 3600 * 24 },
-    );
+    thumbnailUrl = await generateDownloadUrl(r2, character.thumbnailPath);
   }
 
   return {
@@ -176,37 +163,24 @@ export const listCharacters: (
   req: ListCharactersRequest,
   ctx: HandlerContext,
 ) => Promise<ListCharactersResponse> = async (_, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+  const { userId, prisma, r2, generateDownloadUrl } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
-  const r2 = ctx.values.get(contextKeyR2);
-  if (!r2) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
+  // Get characters
   const characters = await prisma.character.findMany({
     where: {
       userId,
     },
   });
 
+  // Prepare results
   const results: Partial<Character>[] = await Promise.all(
     characters.map(async (character) => {
       let thumbnailUrl = '';
       if (character.thumbnailPath !== '') {
-        thumbnailUrl = await getSignedUrl(
-          r2,
-          new GetObjectCommand({
-            Bucket: 'tokimeki',
-            Key: character.thumbnailPath,
-          }),
-          { expiresIn: 3600 * 24 },
-        );
+        thumbnailUrl = await generateDownloadUrl(r2, character.thumbnailPath);
       }
 
       return {
@@ -225,16 +199,11 @@ export const listCharacters: (
 export const updateCharacter: (
   req: UpdateCharacterRequest,
   ctx: HandlerContext,
-) => Promise<UpdateCharacterResponse> = async (_, ctx) => {
-  const userId = ctx.values.get(contextKeyUserId);
+) => Promise<UpdateCharacterResponse> = (_, ctx) => {
+  const { userId } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
-  const prisma = ctx.values.get(contextKeyPrisma);
-  if (!prisma) {
-    throw new ConnectError('Internal Error', Code.Internal);
-  }
 
-  await wait(100);
-  return {} as UpdateCharacterResponse;
+  throw new ConnectError('Unimplemented method.', Code.Unimplemented);
 };
