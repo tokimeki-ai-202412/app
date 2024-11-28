@@ -1,6 +1,7 @@
 import type { CreateRunpodType } from '@/libraries/runpod';
 import {
   contextKeyBucketName,
+  contextKeyOriginUrl,
   contextKeyPrisma,
   contextKeyR2,
   contextKeyRunpod,
@@ -14,6 +15,7 @@ import type { PrismaClient } from '@prisma/client';
 type Props = {
   userId: string | null;
   bucketName: string;
+  originUrl: string;
   prisma: PrismaClient;
   r2: S3Client;
   runpod: CreateRunpodType;
@@ -24,6 +26,10 @@ export function GetProps(ctx: HandlerContext): Props {
   const userId = ctx.values.get(contextKeyUserId) || null;
   const bucketName = ctx.values.get(contextKeyBucketName);
   if (!bucketName) {
+    throw new ConnectError('Internal Error', Code.Internal);
+  }
+  const originUrl = ctx.values.get(contextKeyOriginUrl);
+  if (!originUrl) {
     throw new ConnectError('Internal Error', Code.Internal);
   }
   const prisma = ctx.values.get(contextKeyPrisma);
@@ -56,6 +62,7 @@ export function GetProps(ctx: HandlerContext): Props {
   return {
     userId,
     bucketName,
+    originUrl,
     prisma,
     r2,
     runpod,

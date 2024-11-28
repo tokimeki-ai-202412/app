@@ -18,3 +18,7 @@ export const contextKeyUserId = createContextKey<string | undefined>(undefined);
 export const contextKeyBucketName = createContextKey<string | undefined>(
   undefined,
 );
+
+export const contextKeyOriginUrl = createContextKey<string | undefined>(
+  undefined,
+);

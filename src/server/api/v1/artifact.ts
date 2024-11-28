@@ -114,7 +114,7 @@ export const createArtifact: (
   req: CreateArtifactRequest,
   ctx: HandlerContext,
 ) => Promise<CreateArtifactResponse> = async (req, ctx) => {
-  const { userId, prisma, r2, runpod, bucketName } = GetProps(ctx);
+  const { userId, prisma, r2, runpod, bucketName, originUrl } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
@@ -165,7 +165,7 @@ export const createArtifact: (
       image_path: req.input.imagePath,
       artifact_id: artifact.id,
     },
-    webhook: `https://tokimeki.ai/api/webhook/${artifact.id}`,
+    webhook: `${originUrl}/api/webhook/${artifact.id}`,
   };
   const { id: jobId } = await runpod.createJob(input).catch(() => {
     throw new ConnectError('Internal Error', Code.Internal);

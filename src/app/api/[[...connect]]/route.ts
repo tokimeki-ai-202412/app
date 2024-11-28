@@ -1,6 +1,7 @@
 import { CreateRunpod, type CreateRunpodType } from '@/libraries/runpod';
 import {
   contextKeyBucketName,
+  contextKeyOriginUrl,
   contextKeyPrisma,
   contextKeyR2,
   contextKeyRunpod,
@@ -62,6 +63,7 @@ export function POST(req: NextRequest) {
   contextValues.set(contextKeyR2, r2);
   contextValues.set(contextKeyRunpod, runpod);
   contextValues.set(contextKeyBucketName, bucketName);
+  contextValues.set(contextKeyOriginUrl, new URL(req.url).origin);
 
   // handle request
   const router = new Router(contextValues);
