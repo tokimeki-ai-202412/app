@@ -1,5 +1,7 @@
 import { CreateRunpod, type CreateRunpodType } from '@/libraries/runpod';
 import {
+  contextKeyBucketName,
+  contextKeyOriginUrl,
   contextKeyPrisma,
   contextKeyR2,
   contextKeyRunpod,
@@ -34,7 +36,7 @@ function initPrismaClient(): PrismaClient {
 function initR2(): S3Client {
   return new S3Client({
     region: 'auto',
-    endpoint: `https://b85aec95c2061893225e07d0d9ba7137.r2.cloudflarestorage.com`,
+    endpoint: getRequestContext().env.R2_ENDPOINT,
     credentials: {
       accessKeyId: getRequestContext().env.R2_ACCESS_KEY_ID,
       secretAccessKey: getRequestContext().env.R2_SECRET_ACCESS_KEY,
@@ -53,12 +55,15 @@ export function POST(req: NextRequest) {
   const prisma = initPrismaClient();
   const r2 = initR2();
   const runpod = initRunpod();
+  const bucketName = getRequestContext().env.R2_BUCKET_NAME;
 
   // Create context values
   const contextValues = createContextValues();
   contextValues.set(contextKeyPrisma, prisma);
   contextValues.set(contextKeyR2, r2);
   contextValues.set(contextKeyRunpod, runpod);
+  contextValues.set(contextKeyBucketName, bucketName);
+  contextValues.set(contextKeyOriginUrl, new URL(req.url).origin);
 
   // handle request
   const router = new Router(contextValues);

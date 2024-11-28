@@ -14,3 +14,11 @@ export const contextKeyRunpod = createContextKey<CreateRunpodType | undefined>(
 );
 
 export const contextKeyUserId = createContextKey<string | undefined>(undefined);
+
+export const contextKeyBucketName = createContextKey<string | undefined>(
+  undefined,
+);
+
+export const contextKeyOriginUrl = createContextKey<string | undefined>(
+  undefined,
+);
