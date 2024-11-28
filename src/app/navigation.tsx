@@ -5,15 +5,8 @@ import { MenuDrawer } from '@/components/parts/MenuDrawer.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { useWhois } from '@/states/hooks/user.ts';
-import {
-  AspectRatio,
-  Box,
-  Container,
-  Flex,
-  IconButton,
-} from '@chakra-ui/react';
+import { Box, Container, Flex, IconButton } from '@chakra-ui/react';
 import { Icon } from '@iconify-icon/react';
-import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 
 export function Navigation(): ReactElement {
