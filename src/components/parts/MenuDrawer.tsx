@@ -9,6 +9,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
+import { useWhois } from '@/states/hooks/user.ts';
 import { Flex, VStack } from '@chakra-ui/react';
 import Link from 'next/link';
 import type { ReactElement } from 'react';
@@ -19,6 +20,8 @@ type Props = {
 };
 
 export function MenuDrawer({ isOpen, setIsOpen }: Props): ReactElement {
+  const { user } = useWhois();
+
   return (
     <DrawerRoot open={isOpen} onInteractOutside={() => setIsOpen(false)}>
       <DrawerBackdrop />
@@ -30,7 +33,7 @@ export function MenuDrawer({ isOpen, setIsOpen }: Props): ReactElement {
         <DrawerBody>
           <VStack gap={4}>
             <Link href="/">トップページ</Link>
-            <Link href="/characters">キャラクター</Link>
+            {user && <Link href="/characters">キャラクター</Link>}
           </VStack>
         </DrawerBody>
         <DrawerFooter />
