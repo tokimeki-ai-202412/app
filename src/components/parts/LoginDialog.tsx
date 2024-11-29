@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button.tsx';
+import { Checkbox } from '@/components/ui/checkbox.tsx';
 import {
   DialogBody,
   DialogCloseTrigger,
@@ -8,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog.tsx';
-import { Box, Flex, Text } from '@chakra-ui/react';
+import { Box, Flex, GridItem, SimpleGrid, Text } from '@chakra-ui/react';
 import { Icon } from '@iconify-icon/react';
 import Link from 'next/link';
 import type { ReactElement } from 'react';
@@ -32,22 +34,38 @@ export function LoginDialog({ isOpen, setIsOpen }: Props): ReactElement {
           <DialogTitle>ログインする</DialogTitle>
         </DialogHeader>
         <DialogBody>
-          <Link href="/api/login">
-            <Box
-              bg="transparent"
-              color="blackAlpha.700"
-              borderWidth="2px"
-              borderColor="blackAlpha.700"
-              borderRadius="8px"
-            >
-              <Flex p={4} align="center" gap={4}>
-                <Box fontSize="24px">
-                  <Icon icon="flat-color-icons:google" />
-                </Box>
-                <Text fontWeight="bold">Googleでログイン</Text>
-              </Flex>
-            </Box>
-          </Link>
+          <SimpleGrid columns={1} gap={8}>
+            <GridItem>
+              <Link href="/api/login">
+                <Button
+                  w="full"
+                  size="2xl"
+                  color="blackAlpha.700"
+                  bg="transparent"
+                  borderWidth="1px"
+                  borderColor="blackAlpha.100"
+                  borderRadius="8px"
+                >
+                  <Flex p={4} align="center" gap={4}>
+                    <Box fontSize="24px">
+                      <Icon icon="flat-color-icons:google" />
+                    </Box>
+                    <Text fontWeight="bold">Googleでログイン</Text>
+                  </Flex>
+                </Button>
+              </Link>
+            </GridItem>
+            <GridItem>
+              <Checkbox size="lg" checked={true} disabled={true}>
+                <Link href="/legal/tos">
+                  <Text color="#f0acac" display="inline-block">
+                    利用規約
+                  </Text>
+                </Link>
+                に同意してサービスを利用する。
+              </Checkbox>
+            </GridItem>
+          </SimpleGrid>
         </DialogBody>
         <DialogFooter />
       </DialogContent>
