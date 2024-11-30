@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 
 export default function Page(): ReactElement {
-  const { user } = useWhois();
+  const { loading, user } = useWhois();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -49,7 +49,12 @@ export default function Page(): ReactElement {
               </Button>
             </Link>
           ) : (
-            <Button onClick={() => setIsOpen(true)} w="full" size="2xl">
+            <Button
+              onClick={() => setIsOpen(true)}
+              w="full"
+              size="2xl"
+              loading={loading}
+            >
               試してみる
             </Button>
           )}
