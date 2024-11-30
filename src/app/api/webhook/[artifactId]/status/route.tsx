@@ -1,4 +1,8 @@
-import type { JobStatusResult } from '@/libraries/runpod';
+import {
+  CreateRunpod,
+  type CreateRunpodType,
+  JobStatusResult,
+} from '@/libraries/runpod';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { Client } from '@planetscale/database';
 import { PrismaPlanetScale } from '@prisma/adapter-planetscale';
@@ -23,6 +27,13 @@ function initPrismaClient(): PrismaClient {
   return new PrismaClient({ adapter });
 }
 
+function initRunpod(): CreateRunpodType {
+  return CreateRunpod(
+    getRequestContext().env.RUNPOD_API_TOKEN,
+    getRequestContext().env.RUNPOD_ENDPOINT_HI3D_FIRST_MODEL_512,
+  );
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { artifactId: string } },
@@ -30,8 +41,6 @@ export async function POST(
   const { artifactId } = params;
 
   try {
-    const body: JobStatusResult = await req.json();
-
     // init prisma
     const prisma = initPrismaClient();
     // get artifact
@@ -41,27 +50,47 @@ export async function POST(
       },
     });
 
-    if (artifact.jobId !== body.id) {
-      return NextResponse.json({ error: 'Invalid request.' }, { status: 401 });
+    // Job has not been created
+    if (!artifact.jobId) {
+      return NextResponse.json({ error: 'Job was not found' }, { status: 404 });
     }
 
-    // update status
-    let status: ArtifactStatus = artifact.status || ArtifactStatus.ERROR;
-    if (body.status === 'COMPLETED') {
-      status = ArtifactStatus.DONE;
-    } else if (body.status === 'FAILED' || body.status === 'TIMED_OUT') {
-      status = ArtifactStatus.ERROR;
-    } else if (body.status === 'CANCELLED') {
-      status = ArtifactStatus.CANCELED;
+    // Job is ended
+    if (
+      artifact.status === 'DONE' ||
+      artifact.status === 'CANCELED' ||
+      artifact.status === 'ERROR'
+    ) {
+      return NextResponse.json({ error: 'Status is locked.' }, { status: 423 });
     }
 
-    // update artifact
+    // Job should be suspended
+    if (new Date(artifact.createdAt) < new Date(Date.now() - 10 * 60 * 1000)) {
+      await prisma.artifact.update({
+        where: {
+          id: artifact.id,
+        },
+        data: {
+          status: ArtifactStatus.ERROR,
+        },
+      });
+      return NextResponse.json(null, { status: 200 });
+    }
+
+    const runpod = initRunpod();
+    const { status } = await runpod.getJobStatus(artifact.jobId);
+
+    if (status !== 'IN_PROGRESS') {
+      return NextResponse.json(null, { status: 200 });
+    }
+
+    // update artifact status to GENERATING
     await prisma.artifact.update({
       where: {
         id: artifact.id,
       },
       data: {
-        status,
+        status: ArtifactStatus.GENERATING,
       },
     });
 
