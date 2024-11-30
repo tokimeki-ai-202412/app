@@ -11,26 +11,21 @@ import type {
   UpdateCharacterResponse,
 } from '@/libraries/connect-gen/api/v1/character/api_pb';
 import type { Character } from '@/libraries/connect-gen/model/v1/character_pb.ts';
-import {
-  contextKeyPrisma,
-  contextKeyR2,
-  contextKeyUserId,
-} from '@/server/context.ts';
 import { GetProps } from '@/server/props.ts';
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
-  GetObjectCommand,
+  DeleteObjectsCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Code, ConnectError, type HandlerContext } from '@connectrpc/connect';
 
 export const createCharacter: (
   req: CreateCharacterRequest,
   ctx: HandlerContext,
 ) => Promise<CreateCharacterResponse> = async (req, ctx) => {
-  const { userId, prisma, r2, generateDownloadUrl } = GetProps(ctx);
+  const { userId, prisma, r2, bucketName, generateDownloadUrl } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
@@ -45,7 +40,7 @@ export const createCharacter: (
   // Check temporary file is valid
   try {
     const headCommand = new HeadObjectCommand({
-      Bucket: 'tokimeki',
+      Bucket: bucketName,
       Key: req.thumbnailPath,
     });
     await r2.send(headCommand);
@@ -57,7 +52,7 @@ export const createCharacter: (
   try {
     const thumbnailPath = `characters/thumbnail/${crypto.randomUUID()}`;
     const copyCommand = new CopyObjectCommand({
-      Bucket: 'tokimeki',
+      Bucket: bucketName,
       CopySource: `tokimeki/${req.thumbnailPath}`,
       Key: thumbnailPath,
     });
@@ -96,7 +91,7 @@ export const deleteCharacter: (
   req: DeleteCharacterRequest,
   ctx: HandlerContext,
 ) => Promise<DeleteCharacterResponse> = async (req, ctx) => {
-  const { userId, prisma } = GetProps(ctx);
+  const { userId, prisma, r2, bucketName } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
@@ -112,6 +107,78 @@ export const deleteCharacter: (
     .catch(() => {
       throw new ConnectError('Character not found.', Code.NotFound);
     });
+
+  // Get all artifacts
+  const artifacts = await prisma.artifact
+    .findMany({
+      where: {
+        characterId: req.characterId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Failed to fetch artifacts.', Code.Internal);
+    });
+
+  // Cleanup artifact objects
+  artifacts.map(async (artifact) => {
+    const command = new ListObjectsV2Command({
+      Bucket: bucketName,
+      Prefix: `artifacts/${artifact.id}/`,
+      Delimiter: '/',
+    });
+
+    // Get all files
+    const response = await r2.send(command).catch(() => {
+      throw new ConnectError(
+        'Failed to fetch artifact objects.',
+        Code.Internal,
+      );
+    });
+    if (response.Contents) {
+      const results = response.Contents.map((item) => item.Key);
+      const files = results.filter(
+        (item): item is string => item !== undefined,
+      );
+      // Delete all files
+      if (files.length > 0) {
+        const deleteCommand = new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: {
+            Objects: files.map((key) => ({ Key: key })),
+          },
+        });
+        await r2.send(deleteCommand).catch(() => {
+          throw new ConnectError(
+            'Failed to delete artifact objects.',
+            Code.Internal,
+          );
+        });
+      }
+    }
+  });
+
+  // Cleanup thumbnail
+  if (character.thumbnailPath) {
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: character.thumbnailPath,
+    });
+    await r2.send(deleteCommand).catch(() => {
+      throw new ConnectError(
+        'Failed to delete character thumbnail.',
+        Code.Internal,
+      );
+    });
+  }
+
+  // Delete artifacts related to the character
+  await prisma.artifact.deleteMany({
+    where: {
+      characterId: character.id,
+      userId,
+    },
+  });
 
   // Delete character
   await prisma.character.delete({
