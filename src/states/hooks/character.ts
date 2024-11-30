@@ -2,7 +2,7 @@ import type { Character } from '@/libraries/connect-gen/model/v1/character_pb.ts
 import { getCharacterAtom, listCharactersAtom } from '@/states/atoms/character';
 import {
   getCharacterSelector,
-  listCharactersSelector,
+  listCharactersSelectorWithRefresh,
 } from '@/states/selectors/character';
 import type { Message } from '@bufbuild/protobuf';
 import { useAtom } from 'jotai';
@@ -37,9 +37,10 @@ export function useGetCharacter(id: string): {
 export function useListCharacters(): {
   loading: boolean;
   characters: Omit<Character[], keyof Message> | null;
+  refresh: () => void;
 } {
   const [characters, setCharacters] = useAtom(listCharactersAtom);
-  const [value] = useAtom(loadable(listCharactersSelector));
+  const [value, refresh] = useAtom(listCharactersSelectorWithRefresh);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -56,5 +57,5 @@ export function useListCharacters(): {
     }
   }, [value.state]);
 
-  return { loading, characters };
+  return { loading, characters, refresh };
 }

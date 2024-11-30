@@ -1,7 +1,7 @@
 'use client';
 
 import { Artifact } from '@/app/characters/[characterId]/artifact.tsx';
-import { Button } from '@/components/ui/button.tsx';
+import { DeleteCharacter } from '@/app/characters/[characterId]/deleteCharacter.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { useListArtifact } from '@/states/hooks/artifact.ts';
 import { useGetCharacter } from '@/states/hooks/character.ts';
@@ -9,7 +9,6 @@ import {
   AspectRatio,
   Box,
   Container,
-  Flex,
   GridItem,
   HStack,
   Heading,
@@ -19,7 +18,6 @@ import {
   Tabs,
   VStack,
 } from '@chakra-ui/react';
-import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 
 export const runtime = 'edge';
@@ -97,7 +95,6 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 <Tabs.Trigger
                   color="blackAlpha.700"
                   value="manage"
-                  disabled={true}
                   css={{
                     _selected: {
                       color: 'blackAlpha.700',
@@ -126,7 +123,9 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                     })
                   : ''}
               </Tabs.Content>
-              <Tabs.Content value="manage"></Tabs.Content>
+              <Tabs.Content value="manage">
+                <DeleteCharacter characterId={characterId} />
+              </Tabs.Content>
             </Tabs.Root>
           </Box>
         </GridItem>
