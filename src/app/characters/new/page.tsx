@@ -148,6 +148,7 @@ export default function Page(): ReactElement {
                   キャラクター名
                 </Text>
                 <Input
+                  fontSize="16px"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="キャラクター名を入力"
