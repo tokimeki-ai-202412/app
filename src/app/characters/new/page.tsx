@@ -10,6 +10,7 @@ import {
   SelectValueText,
 } from '@/components/ui/select';
 import { API } from '@/libraries/connect-client';
+import { useWhois } from '@/states/hooks/user.ts';
 import {
   AspectRatio,
   Box,
@@ -32,6 +33,7 @@ const models = createListCollection({
 });
 
 export default function Page(): ReactElement {
+  const { user } = useWhois();
   const [thumbnail, setThumbnail] = useState<string>('/sample.png');
   const [name, setName] = useState<string>('新しいキャラクター');
   const [file, setFile] = useState<File | null>(null);
@@ -119,11 +121,7 @@ export default function Page(): ReactElement {
             borderRadius="8px"
             bg="blackAlpha.50"
           >
-            <Box
-              as="label" // ラベル要素として振る舞う
-              w="full"
-              cursor="pointer" // ポインタカーソルに変更
-            >
+            <Box as="label" w="full" cursor="pointer">
               <AspectRatio ratio={1}>
                 <Image
                   w="full"
@@ -133,9 +131,9 @@ export default function Page(): ReactElement {
               </AspectRatio>
               <input
                 type="file"
-                accept="image/*" // 画像ファイルのみ許可
+                accept="image/*"
                 style={{
-                  display: 'none', // ファイル入力要素を非表示
+                  display: 'none',
                 }}
                 onChange={handleFileChange}
               />
@@ -194,7 +192,7 @@ export default function Page(): ReactElement {
                   w="full"
                   size="2xl"
                   loading={loading}
-                  disabled={file === null || name === '' || loading}
+                  disabled={file === null || name === '' || loading || !user}
                   onClick={createJob}
                 >
                   生成する
