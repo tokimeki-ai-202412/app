@@ -20,7 +20,7 @@ export const getArtifactSelector = atomFamily(
   deepEqual,
 );
 
-export const listArtifactSelector = atomFamily(
+const listArtifactSelector = atomFamily(
   (characterId: string) =>
     atomWithRefresh(async () => {
       const res = await API.Artifact.listArtifacts({ characterId });
