@@ -48,6 +48,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
   const { user } = useWhois();
   const { refresh } = useListArtifact(characterId);
   const [thumbnail, setThumbnail] = useState<string>('/sample.png');
+  const [modelName, setModelName] = useState<string[]>([modelData[1].id]);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -86,6 +87,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
       const { artifact } = await API.Artifact.createArtifact({
         input: {
           imagePath: path,
+          modelName: modelName[0],
         },
         characterId: characterId,
       });
@@ -154,7 +156,8 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 <SelectRoot
                   w="full"
                   collection={models}
-                  defaultValue={['girls_pose100_512px']}
+                  value={modelName}
+                  onValueChange={(e) => setModelName(e.value)}
                 >
                   <SelectLabel fontSize="0.9em">モデル</SelectLabel>
                   <SelectTrigger>
