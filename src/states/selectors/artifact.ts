@@ -12,12 +12,19 @@ import {
 
 export const getArtifactSelector = atomFamily(
   (artifactId: string) =>
-    atomWithCache(async () => {
+    atomWithRefresh(async () => {
       const res = await API.Artifact.getArtifact({ artifactId });
       if (!res.artifact) throw new Error('api internal error');
       return res.artifact;
     }),
   deepEqual,
+);
+
+export const getArtifactSelectorWithRefresh = atomFamily((artifactId: string) =>
+  atom(
+    (get) => get(loadable(getArtifactSelector(artifactId))),
+    (get, set) => set(getArtifactSelector(artifactId)),
+  ),
 );
 
 const listArtifactSelector = atomFamily(

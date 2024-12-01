@@ -6,15 +6,16 @@ import {
 } from '@/states/selectors/artifact.ts';
 import type { Message } from '@bufbuild/protobuf';
 import { useAtom } from 'jotai';
-import { loadable } from 'jotai/utils';
-import { useEffect, useState } from 'react';
+import { atomWithReducer, loadable } from 'jotai/utils';
+import { useCallback, useEffect, useState } from 'react';
 
 export function useGetArtifact(id: string): {
   loading: boolean;
   artifact: Omit<Artifact, keyof Message> | null;
+  refresh: () => void;
 } {
   const [artifact, setArtifact] = useAtom(getArtifactAtom(id));
-  const [value] = useAtom(loadable(getArtifactSelector(id)));
+  const [value, refresh] = useAtom(loadable(getArtifactSelector(id)));
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -31,13 +32,14 @@ export function useGetArtifact(id: string): {
     }
   }, [value.state]);
 
-  return { loading, artifact };
+  return { loading, artifact, refresh };
 }
 
 export function useListArtifact(id: string): {
   loading: boolean;
   artifacts: Omit<Artifact, keyof Message>[] | null;
   refresh: () => void;
+  updateArtifact: (artifact: Artifact) => void;
 } {
   const [artifacts, setArtifacts] = useAtom(listArtifactAtom(id));
   const [value, refresh] = useAtom(listArtifactSelectorWithRefresh(id));
@@ -57,5 +59,18 @@ export function useListArtifact(id: string): {
     }
   }, [value.state]);
 
-  return { loading, artifacts, refresh };
+  // artifactsから特定のidを持つアーティファクトを置き換える関数
+  const updateArtifact = useCallback(
+    (updatedArtifact: Artifact) => {
+      setArtifacts((prevArtifacts) => {
+        if (!prevArtifacts) return prevArtifacts;
+        return prevArtifacts.map((artifact) =>
+          artifact.id === updatedArtifact.id ? updatedArtifact : artifact,
+        );
+      });
+    },
+    [setArtifacts],
+  );
+
+  return { loading, artifacts, refresh, updateArtifact };
 }
