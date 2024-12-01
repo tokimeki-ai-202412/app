@@ -1,15 +1,21 @@
-import {
-  CreateRunpod,
-  type CreateRunpodType,
-  JobStatusResult,
-} from '@/libraries/runpod';
+import { modelData } from '@/const/model.ts';
+import { CreateRunpod, type RunpodClient } from '@/libraries/runpod';
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { Code, ConnectError } from '@connectrpc/connect';
 import { Client } from '@planetscale/database';
 import { PrismaPlanetScale } from '@prisma/adapter-planetscale';
 import { ArtifactStatus, PrismaClient } from '@prisma/client';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
+
+function getEndpointById(id: string): string {
+  const model = modelData.find((m) => m.id === id);
+  if (!model) {
+    throw new ConnectError('Model not found', Code.NotFound);
+  }
+  return model.endpoint;
+}
 
 function initPrismaClient(): PrismaClient {
   const client = new Client({
@@ -27,11 +33,8 @@ function initPrismaClient(): PrismaClient {
   return new PrismaClient({ adapter });
 }
 
-function initRunpod(): CreateRunpodType {
-  return CreateRunpod(
-    getRequestContext().env.RUNPOD_API_TOKEN,
-    getRequestContext().env.RUNPOD_ENDPOINT_HI3D_FIRST_MODEL_512,
-  );
+function initRunpod(): RunpodClient {
+  return CreateRunpod(getRequestContext().env.RUNPOD_API_TOKEN);
 }
 
 export async function POST(
@@ -54,6 +57,9 @@ export async function POST(
     if (!artifact.jobId) {
       return NextResponse.json({ error: 'Job was not found' }, { status: 404 });
     }
+
+    // Get model endpoint
+    const endpoint = getEndpointById(artifact.modelId);
 
     // Job is ended
     if (
@@ -78,7 +84,7 @@ export async function POST(
     }
 
     const runpod = initRunpod();
-    const { status } = await runpod.getJobStatus(artifact.jobId);
+    const { status } = await runpod.getJobStatus(endpoint, artifact.jobId);
 
     if (status !== 'IN_PROGRESS') {
       return NextResponse.json(null, { status: 200 });
