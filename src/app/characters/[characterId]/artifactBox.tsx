@@ -6,8 +6,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog.tsx';
 import { Tag } from '@/components/ui/tag.tsx';
+import { API } from '@/libraries/connect-client';
 import type { Artifact as TypeArtifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
-import { useListArtifact } from '@/states/hooks/artifact.ts';
+import { useGetArtifact, useListArtifact } from '@/states/hooks/artifact.ts';
 import type { Message } from '@bufbuild/protobuf';
 import {
   AspectRatio,
@@ -21,7 +22,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement, memo, useEffect, useState } from 'react';
 
 type ArtifactStatusProps = {
   status: string;
@@ -142,7 +143,7 @@ export function ArtifactBox({
   artifact,
   characterId,
 }: ArtifactBoxProps): ReactElement {
-  const { refresh } = useListArtifact(characterId);
+  const { updateArtifact } = useListArtifact(characterId);
   const defaultShowFrame = [0, 3, 6, 12, 17, 24];
 
   const [showAll, setShowAll] = useState(false);
@@ -153,7 +154,12 @@ export function ArtifactBox({
 
     if (artifact.status === 'QUEUED') {
       intervalId = setInterval(() => {
-        refresh();
+        API.Artifact.getArtifact({ artifactId: artifact.id }).then(
+          ({ artifact }) => {
+            if (!artifact) return;
+            updateArtifact(artifact);
+          },
+        );
       }, 10000);
     }
 
@@ -162,7 +168,7 @@ export function ArtifactBox({
         clearInterval(intervalId);
       }
     };
-  }, [artifact.status, refresh]);
+  }, [artifact.status, artifact.id, updateArtifact]);
 
   useEffect(() => {
     if (!showAll) {

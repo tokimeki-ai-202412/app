@@ -22,6 +22,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { Icon } from '@iconify-icon/react';
+import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 
 export const runtime = 'edge';
@@ -94,13 +95,15 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 </SimpleGrid>
                 <Spacer />
                 <Box>
-                  <Button
-                    size={{ base: 'sm', lg: 'xl' }}
-                    disabled={loading}
-                    loading={loading}
-                  >
-                    追加で生成する
-                  </Button>
+                  <Link href={`/characters/${characterId}/new`}>
+                    <Button
+                      size={{ base: 'sm', lg: 'xl' }}
+                      disabled={loading}
+                      loading={loading}
+                    >
+                      追加で生成する
+                    </Button>
+                  </Link>
                 </Box>
                 <Box></Box>
               </Stack>
