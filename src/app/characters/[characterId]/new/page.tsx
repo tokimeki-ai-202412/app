@@ -9,7 +9,9 @@ import {
   SelectTrigger,
   SelectValueText,
 } from '@/components/ui/select';
+import { modelData } from '@/const/model.ts';
 import { API } from '@/libraries/connect-client';
+import { useListArtifact } from '@/states/hooks/artifact.ts';
 import { useWhois } from '@/states/hooks/user.ts';
 import {
   AspectRatio,
@@ -28,7 +30,10 @@ import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 
 const models = createListCollection({
-  items: [{ label: 'Girls Pose100 - 512px', value: 'girls-pose100-512' }],
+  items: modelData.map((model) => ({
+    label: model.name,
+    value: model.id,
+  })),
 });
 
 export const runtime = 'edge';
@@ -41,7 +46,9 @@ type Props = {
 
 export default function Page({ params: { characterId } }: Props): ReactElement {
   const { user } = useWhois();
+  const { refresh } = useListArtifact(characterId);
   const [thumbnail, setThumbnail] = useState<string>('/sample.png');
+  const [modelName, setModelName] = useState<string[]>([modelData[1].id]);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -80,6 +87,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
       const { artifact } = await API.Artifact.createArtifact({
         input: {
           imagePath: path,
+          modelName: modelName[0],
         },
         characterId: characterId,
       });
@@ -88,6 +96,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
       setThumbnail('/sample.png');
       setFile(null);
 
+      refresh();
       router.push(`/characters/${characterId}`);
     } catch (e) {
       console.log(e);
@@ -104,7 +113,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
             color="blackAlpha.700"
             textAlign="center"
           >
-            新しいキャラクターを追加
+            キャラクターに画像を追加
           </Heading>
         </GridItem>
         <GridItem>
@@ -147,7 +156,8 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 <SelectRoot
                   w="full"
                   collection={models}
-                  defaultValue={['girls-pose100-512']}
+                  value={modelName}
+                  onValueChange={(e) => setModelName(e.value)}
                 >
                   <SelectLabel fontSize="0.9em">モデル</SelectLabel>
                   <SelectTrigger>

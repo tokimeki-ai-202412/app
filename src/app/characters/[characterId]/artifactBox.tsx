@@ -6,10 +6,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { Tag } from '@/components/ui/tag.tsx';
 import { API } from '@/libraries/connect-client';
 import type { Artifact as TypeArtifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
-import { useGetArtifact, useListArtifact } from '@/states/hooks/artifact.ts';
+import { useListArtifact } from '@/states/hooks/artifact.ts';
 import type { Message } from '@bufbuild/protobuf';
 import {
   AspectRatio,
@@ -21,9 +20,8 @@ import {
   Spinner,
   Stack,
   Text,
-  VStack,
 } from '@chakra-ui/react';
-import { type ReactElement, memo, useEffect, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 
 type ArtifactStatusProps = {
   status: string;
@@ -153,7 +151,7 @@ export function ArtifactBox({
   useEffect(() => {
     let intervalId: any;
 
-    if (artifact.status === 'QUEUED') {
+    if (artifact.status === 'QUEUED' || artifact.status === 'GENERATING') {
       intervalId = setInterval(() => {
         API.Artifact.getArtifact({ artifactId: artifact.id }).then(
           ({ artifact }) => {
@@ -202,7 +200,7 @@ export function ArtifactBox({
                       <GridItem key={frame} colSpan={1}>
                         <ArtifactImage
                           src={artifact.objectUrls[frame]}
-                          accent={frame === 0}
+                          accent={false}
                         />
                       </GridItem>
                     );

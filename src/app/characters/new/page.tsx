@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValueText,
 } from '@/components/ui/select';
+import { modelData } from '@/const/model.ts';
 import { API } from '@/libraries/connect-client';
 import { useWhois } from '@/states/hooks/user.ts';
 import {
@@ -29,13 +30,14 @@ import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 
 const models = createListCollection({
-  items: [{ label: '（デモ用）First_Model_512px', value: 'First_Model_512px' }],
+  items: [{ label: modelData[0].name, value: modelData[0].id }],
 });
 
 export default function Page(): ReactElement {
   const { user } = useWhois();
   const [thumbnail, setThumbnail] = useState<string>('/sample.png');
   const [name, setName] = useState<string>('新しいキャラクター');
+  const [modelName, setModelName] = useState<string[]>([modelData[0].id]);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -79,6 +81,7 @@ export default function Page(): ReactElement {
       const { artifact } = await API.Artifact.createArtifact({
         input: {
           imagePath: path,
+          modelName: modelName[0],
         },
         characterId: character.id,
       });
@@ -162,7 +165,8 @@ export default function Page(): ReactElement {
                 <SelectRoot
                   w="full"
                   collection={models}
-                  defaultValue={['First_Model_512px']}
+                  value={modelName}
+                  onValueChange={(e) => setModelName(e.value)}
                 >
                   <SelectLabel fontSize="0.9em">モデル</SelectLabel>
                   <SelectTrigger>

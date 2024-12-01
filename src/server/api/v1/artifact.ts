@@ -1,3 +1,4 @@
+import { modelData } from '@/const/model.ts';
 import type {
   CancelArtifactRequest,
   CancelArtifactResponse,
@@ -23,6 +24,14 @@ import { Code, ConnectError, type HandlerContext } from '@connectrpc/connect';
 import { ArtifactStatus } from '@prisma/client';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function getEndpointById(id: string): string {
+  const model = modelData.find((m) => m.id === id);
+  if (!model) {
+    throw new ConnectError('Model not found', Code.NotFound);
+  }
+  return model.endpoint;
+}
 
 async function createObjectUrls(
   r2: S3Client,
@@ -81,6 +90,9 @@ export const cancelArtifact: (
       throw new ConnectError('Artifact not found', Code.NotFound);
     });
 
+  // Get endpoint id
+  const endpoint = getEndpointById(artifact.modelId);
+
   // Check artifact is active
   if (
     artifact.status === ArtifactStatus.QUEUED ||
@@ -90,7 +102,7 @@ export const cancelArtifact: (
       throw new ConnectError('Broken artifact', Code.PermissionDenied);
     }
 
-    await runpod.cancelJob(artifact.jobId);
+    await runpod.cancelJob(endpoint, artifact.jobId);
 
     artifact = await prisma.artifact.update({
       where: {
@@ -123,9 +135,15 @@ export const createArtifact: (
   if (!req.input) {
     throw new ConnectError('Invalid input.', Code.InvalidArgument);
   }
+  if (!req.input.modelName) {
+    throw new ConnectError('Invalid model.', Code.InvalidArgument);
+  }
   if (!req.input.imagePath.startsWith('temporary/')) {
     throw new ConnectError('Invalid image.', Code.InvalidArgument);
   }
+
+  // Get model endpoint
+  const endpoint = getEndpointById(req.input.modelName);
 
   // Rate limiting
   const queuedCount = await prisma.artifact.count({
@@ -167,6 +185,7 @@ export const createArtifact: (
     data: {
       inputPath: req.input.imagePath,
       characterId: character.id,
+      modelId: req.input.modelName,
       userId,
     },
   });
@@ -179,7 +198,7 @@ export const createArtifact: (
     },
     webhook: `${originUrl}/api/webhook/${artifact.id}`,
   };
-  const { id: jobId } = await runpod.createJob(input).catch(() => {
+  const { id: jobId } = await runpod.createJob(endpoint, input).catch(() => {
     throw new ConnectError('Internal Error', Code.Internal);
   });
 

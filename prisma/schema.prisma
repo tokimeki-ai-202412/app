@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
@@ -45,6 +45,7 @@ model Artifact {
   jobId       String?
   status      ArtifactStatus? @default(ERROR)
   inputPath   String
+  modelId     String
   characterId String
   userId      String
   createdAt   DateTime        @default(now())

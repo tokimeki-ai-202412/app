@@ -156,17 +156,19 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 </Tabs.Trigger>
               </Tabs.List>
               <Tabs.Content value="artifacts" focusVisibleRing={'none'}>
-                {artifacts
-                  ? artifacts.map((artifact) => {
-                      return (
-                        <ArtifactBox
-                          key={artifact.id}
-                          artifact={artifact}
-                          characterId={characterId}
-                        />
-                      );
-                    })
-                  : ''}
+                <SimpleGrid columns={1} gap={8}>
+                  {artifacts
+                    ? artifacts.map((artifact) => {
+                        return (
+                          <ArtifactBox
+                            key={artifact.id}
+                            artifact={artifact}
+                            characterId={characterId}
+                          />
+                        );
+                      })
+                    : ''}
+                </SimpleGrid>
               </Tabs.Content>
               <Tabs.Content value="manage">
                 <DeleteCharacter characterId={characterId} />
