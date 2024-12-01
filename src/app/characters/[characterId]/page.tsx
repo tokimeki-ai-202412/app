@@ -2,6 +2,7 @@
 
 import { Artifact } from '@/app/characters/[characterId]/artifact.tsx';
 import { DeleteCharacter } from '@/app/characters/[characterId]/deleteCharacter.tsx';
+import { Button } from '@/components/ui/button.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { useListArtifact } from '@/states/hooks/artifact.ts';
 import { useGetCharacter } from '@/states/hooks/character.ts';
@@ -9,15 +10,18 @@ import {
   AspectRatio,
   Box,
   Container,
+  Flex,
   GridItem,
   HStack,
   Heading,
   Image,
   SimpleGrid,
   Spacer,
+  Stack,
   Tabs,
-  VStack,
+  Text,
 } from '@chakra-ui/react';
+import { Icon } from '@iconify-icon/react';
 import { type ReactElement, useState } from 'react';
 
 export const runtime = 'edge';
@@ -30,7 +34,7 @@ type Props = {
 
 export default function Page({ params: { characterId } }: Props): ReactElement {
   const { artifacts } = useListArtifact(characterId);
-  const { character } = useGetCharacter(characterId);
+  const { loading, character } = useGetCharacter(characterId);
 
   const [tab, setTab] = useState<string | null>('artifacts');
 
@@ -38,7 +42,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
     <Container maxW={{ base: '1024px' }}>
       <SimpleGrid columns={1} gap={8}>
         <GridItem>
-          <HStack w="full" gap={4}>
+          <HStack w="full" h="full" gap={4}>
             <Box
               borderWidth="1px"
               borderColor="blackAlpha.50"
@@ -56,12 +60,41 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 )}
               </AspectRatio>
             </Box>
-            <Box w="full">
-              <VStack w="full" align="flex-start" h="full">
-                {character && (
-                  <Heading color="blackAlpha.700">{character.name}</Heading>
-                )}
-              </VStack>
+            <Box w="full" h={{ base: 'full', lg: 'auto' }}>
+              <Stack
+                direction={{ base: 'column', lg: 'row' }}
+                w="full"
+                h="full"
+                align="flex-start"
+              >
+                <SimpleGrid columns={1} gap={2}>
+                  {character && artifacts && (
+                    <>
+                      <Box>
+                        <Heading color="blackAlpha.700">
+                          {character.name}
+                        </Heading>
+                      </Box>
+                      <Flex align="center" color="blackAlpha.700" gap={1}>
+                        <Icon icon="basil:diamond-outline" />
+                        <Text>生成結果</Text>
+                        <Text>{artifacts.length}件</Text>
+                      </Flex>
+                    </>
+                  )}
+                </SimpleGrid>
+                <Spacer />
+                <Box>
+                  <Button
+                    size={{ base: 'sm', lg: 'xl' }}
+                    disabled={loading}
+                    loading={loading}
+                  >
+                    追加で生成する
+                  </Button>
+                </Box>
+                <Box></Box>
+              </Stack>
             </Box>
           </HStack>
         </GridItem>
