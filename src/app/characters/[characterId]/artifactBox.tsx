@@ -153,7 +153,7 @@ export function ArtifactBox({
   useEffect(() => {
     let intervalId: any;
 
-    if (artifact.status === 'QUEUED') {
+    if (artifact.status === 'QUEUED' || artifact.status === 'GENERATING') {
       intervalId = setInterval(() => {
         API.Artifact.getArtifact({ artifactId: artifact.id }).then(
           ({ artifact }) => {
@@ -202,7 +202,7 @@ export function ArtifactBox({
                       <GridItem key={frame} colSpan={1}>
                         <ArtifactImage
                           src={artifact.objectUrls[frame]}
-                          accent={frame === 0}
+                          accent={false}
                         />
                       </GridItem>
                     );
