@@ -83,7 +83,7 @@ export const cancelArtifact: (
 
   // Check artifact is active
   if (
-    artifact.status === ArtifactStatus.QUQUED ||
+    artifact.status === ArtifactStatus.QUEUED ||
     artifact.status === ArtifactStatus.GENERATING
   ) {
     if (!artifact.jobId) {
@@ -132,7 +132,7 @@ export const createArtifact: (
     where: {
       userId,
       OR: [
-        { status: ArtifactStatus.QUQUED },
+        { status: ArtifactStatus.QUEUED },
         { status: ArtifactStatus.GENERATING },
       ],
     },
@@ -177,7 +177,7 @@ export const createArtifact: (
       id: artifact.id,
     },
     data: {
-      status: ArtifactStatus.QUQUED,
+      status: ArtifactStatus.QUEUED,
       jobId,
     },
   });
@@ -251,6 +251,9 @@ export const listArtifacts: (
       where: {
         characterId: req.characterId,
         userId,
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     })
     .catch(() => {
