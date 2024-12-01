@@ -11,6 +11,7 @@
     "format:prisma": "npx prisma format",
     "generate:prisma": "npx prisma generate",
     "generate:proto": "npx buf generate",
+    "migrate:prisma": "npx prisma db push dev",
     "deploy": "yarn build:pages && wrangler pages deploy --branch develop",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
   },
