@@ -5,6 +5,7 @@ import {
   DialogRoot,
   DialogTrigger,
 } from '@/components/ui/dialog.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Tag } from '@/components/ui/tag.tsx';
 import { API } from '@/libraries/connect-client';
 import type { Artifact as TypeArtifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
@@ -195,29 +196,42 @@ export function ArtifactBox({
               templateColumns={{ base: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }}
               gap={{ base: 1, lg: 4 }}
             >
-              {showFrames.map((frame) => {
-                return (
-                  <GridItem key={frame} colSpan={1}>
-                    <ArtifactImage
-                      src={artifact.objectUrls[frame]}
-                      accent={frame === 0}
-                    />
-                  </GridItem>
-                );
-              })}
+              {artifact.objectUrls.length > 0
+                ? showFrames.map((frame) => {
+                    return (
+                      <GridItem key={frame} colSpan={1}>
+                        <ArtifactImage
+                          src={artifact.objectUrls[frame]}
+                          accent={frame === 0}
+                        />
+                      </GridItem>
+                    );
+                  })
+                : showFrames.map((frame) => {
+                    return (
+                      <GridItem key={frame} colSpan={1}>
+                        <AspectRatio ratio={1}>
+                          <Skeleton w="full" />
+                        </AspectRatio>
+                      </GridItem>
+                    );
+                  })}
             </Grid>
-            <Flex justify="flex-end">
-              <Button
-                color="blackAlpha.700"
-                bg="transparent"
-                borderWidth="1px"
-                borderColor="blackAlpha.100"
-                borderRadius="8px"
-                onClick={() => setShowAll(!showAll)}
-              >
-                {showAll ? '閉じる' : 'すべて見る'}
-              </Button>
-            </Flex>
+            {artifact.status !== 'QUEUED' &&
+              artifact.status !== 'GENERATING' && (
+                <Flex justify="flex-end">
+                  <Button
+                    color="blackAlpha.700"
+                    bg="transparent"
+                    borderWidth="1px"
+                    borderColor="blackAlpha.100"
+                    borderRadius="8px"
+                    onClick={() => setShowAll(!showAll)}
+                  >
+                    {showAll ? '閉じる' : 'すべて見る'}
+                  </Button>
+                </Flex>
+              )}
           </>
         )}
       </Stack>
