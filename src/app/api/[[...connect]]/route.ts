@@ -63,7 +63,12 @@ export function POST(req: NextRequest) {
   contextValues.set(contextKeyR2, r2);
   contextValues.set(contextKeyRunpod, runpod);
   contextValues.set(contextKeyBucketName, bucketName);
-  contextValues.set(contextKeyOriginUrl, new URL(req.url).origin);
+  contextValues.set(
+    contextKeyOriginUrl,
+    process.env.NODE_ENV === 'production'
+      ? new URL(req.url).origin
+      : 'https://develop.tokimeki-ai-app.pages.dev',
+  );
 
   // handle request
   const router = new Router(contextValues);
