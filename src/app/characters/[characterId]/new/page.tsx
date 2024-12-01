@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValueText,
 } from '@/components/ui/select';
+import { modelData } from '@/const/model.ts';
 import { API } from '@/libraries/connect-client';
 import { useListArtifact } from '@/states/hooks/artifact.ts';
 import { useWhois } from '@/states/hooks/user.ts';
@@ -29,7 +30,10 @@ import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 
 const models = createListCollection({
-  items: [{ label: 'Girls Pose100 - 512px', value: 'girls-pose100-512' }],
+  items: modelData.map((model) => ({
+    label: model.name,
+    value: model.id,
+  })),
 });
 
 export const runtime = 'edge';
@@ -150,7 +154,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 <SelectRoot
                   w="full"
                   collection={models}
-                  defaultValue={['girls-pose100-512']}
+                  defaultValue={['girls_pose100_512px']}
                 >
                   <SelectLabel fontSize="0.9em">モデル</SelectLabel>
                   <SelectTrigger>
