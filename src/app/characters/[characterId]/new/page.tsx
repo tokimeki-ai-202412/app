@@ -107,7 +107,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
             color="blackAlpha.700"
             textAlign="center"
           >
-            新しいキャラクターを追加
+            キャラクターに画像を追加
           </Heading>
         </GridItem>
         <GridItem>
