@@ -1,6 +1,6 @@
 'use client';
 
-import { Artifact } from '@/app/characters/[characterId]/artifact.tsx';
+import { ArtifactBox } from '@/app/characters/[characterId]/artifactBox.tsx';
 import { DeleteCharacter } from '@/app/characters/[characterId]/deleteCharacter.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
@@ -68,20 +68,29 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                 align="flex-start"
               >
                 <SimpleGrid columns={1} gap={2}>
-                  {character && artifacts && (
-                    <>
-                      <Box>
-                        <Heading color="blackAlpha.700">
-                          {character.name}
-                        </Heading>
-                      </Box>
-                      <Flex align="center" color="blackAlpha.700" gap={1}>
+                  <Box>
+                    {character ? (
+                      <Heading color="blackAlpha.700">{character.name}</Heading>
+                    ) : (
+                      <Skeleton>
+                        <Heading>loading</Heading>
+                      </Skeleton>
+                    )}
+                  </Box>
+                  <Flex align="center" color="blackAlpha.700" gap={1}>
+                    {artifacts ? (
+                      <>
                         <Icon icon="basil:diamond-outline" />
                         <Text>生成結果</Text>
                         <Text>{artifacts.length}件</Text>
-                      </Flex>
-                    </>
-                  )}
+                      </>
+                    ) : (
+                      <>
+                        <Icon icon="basil:diamond-outline" />
+                        <Text>生成結果</Text>
+                      </>
+                    )}
+                  </Flex>
                 </SimpleGrid>
                 <Spacer />
                 <Box>
@@ -143,14 +152,14 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
                   キャラクターの管理
                 </Tabs.Trigger>
               </Tabs.List>
-              <Tabs.Content value="artifacts">
+              <Tabs.Content value="artifacts" focusVisibleRing={'none'}>
                 {artifacts
                   ? artifacts.map((artifact) => {
                       return (
-                        <Artifact
+                        <ArtifactBox
                           key={artifact.id}
-                          characterId={characterId}
                           artifact={artifact}
+                          characterId={characterId}
                         />
                       );
                     })
