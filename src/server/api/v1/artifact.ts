@@ -150,11 +150,23 @@ export const createArtifact: (
     throw new ConnectError('Invalid input image.', Code.InvalidArgument);
   });
 
+  // Get character
+  const character = await prisma.character
+    .findFirstOrThrow({
+      where: {
+        id: req.characterId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Character not found.', Code.NotFound);
+    });
+
   // Create temporary artifact
   const artifact = await prisma.artifact.create({
     data: {
       inputPath: req.input.imagePath,
-      characterId: req.characterId,
+      characterId: character.id,
       userId,
     },
   });
