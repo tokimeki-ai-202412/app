@@ -10,6 +10,7 @@ import {
   SelectValueText,
 } from '@/components/ui/select';
 import { API } from '@/libraries/connect-client';
+import { useListArtifact } from '@/states/hooks/artifact.ts';
 import { useWhois } from '@/states/hooks/user.ts';
 import {
   AspectRatio,
@@ -41,6 +42,7 @@ type Props = {
 
 export default function Page({ params: { characterId } }: Props): ReactElement {
   const { user } = useWhois();
+  const { refresh } = useListArtifact(characterId);
   const [thumbnail, setThumbnail] = useState<string>('/sample.png');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -88,6 +90,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
       setThumbnail('/sample.png');
       setFile(null);
 
+      refresh();
       router.push(`/characters/${characterId}`);
     } catch (e) {
       console.log(e);
