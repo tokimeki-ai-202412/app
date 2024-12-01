@@ -66,7 +66,7 @@ export function Artifact({ artifact, characterId }: Props): ReactElement {
   useEffect(() => {
     let intervalId: any;
 
-    if (artifact.status === 'QUQUED') {
+    if (artifact.status === 'QUEUED') {
       intervalId = setInterval(() => {
         refresh();
       }, 10000);
@@ -81,7 +81,7 @@ export function Artifact({ artifact, characterId }: Props): ReactElement {
 
   return (
     <Box>
-      {artifact.status === 'QUQUED' ? (
+      {artifact.status === 'QUEUED' ? (
         <VStack w="full" py={8} gap={4}>
           <Spinner
             size="lg"

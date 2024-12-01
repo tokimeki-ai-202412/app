@@ -33,7 +33,7 @@ model Character {
 }
 
 enum ArtifactStatus {
-  QUQUED
+  QUEUED
   GENERATING
   CANCELED
   ERROR
