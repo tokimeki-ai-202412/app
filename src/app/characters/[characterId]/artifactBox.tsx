@@ -1,7 +1,15 @@
 import { Button } from '@/components/ui/button.tsx';
+import {
+  DialogBody,
+  DialogContent,
+  DialogRoot,
+  DialogTrigger,
+} from '@/components/ui/dialog.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Tag } from '@/components/ui/tag.tsx';
+import { API } from '@/libraries/connect-client';
 import type { Artifact as TypeArtifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
-import { useListArtifact } from '@/states/hooks/artifact.ts';
+import { useGetArtifact, useListArtifact } from '@/states/hooks/artifact.ts';
 import type { Message } from '@bufbuild/protobuf';
 import {
   AspectRatio,
@@ -15,7 +23,7 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { type ReactElement, useEffect } from 'react';
+import { type ReactElement, memo, useEffect, useState } from 'react';
 
 type ArtifactStatusProps = {
   status: string;
@@ -81,6 +89,52 @@ export function ArtifactStatus({ status }: ArtifactStatusProps): ReactElement {
   );
 }
 
+type ArtifactPreviewProps = {
+  src: string;
+  accent: boolean;
+};
+
+function ArtifactImage({ src, accent }: ArtifactPreviewProps): ReactElement {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <Box as="label" w="full" cursor="pointer">
+        <AspectRatio
+          ratio={1}
+          borderWidth={accent ? '2px' : '1px'}
+          borderColor={accent ? '#f0acac' : 'blackAlpha.100'}
+          borderRadius="8px"
+        >
+          <Image src={src} />
+        </AspectRatio>
+        <Button
+          style={{
+            display: 'none',
+          }}
+          onClick={() => {
+            setIsOpen(true);
+          }}
+        />
+      </Box>
+      <DialogRoot
+        open={isOpen}
+        placement="center"
+        onInteractOutside={() => setIsOpen(false)}
+      >
+        <DialogTrigger />
+        <DialogContent>
+          <DialogBody>
+            <AspectRatio ratio={1}>
+              <Image src={src} />
+            </AspectRatio>
+          </DialogBody>
+        </DialogContent>
+      </DialogRoot>
+    </>
+  );
+}
+
 type ArtifactBoxProps = {
   artifact: Omit<TypeArtifact, keyof Message>;
   characterId: string;
@@ -90,14 +144,23 @@ export function ArtifactBox({
   artifact,
   characterId,
 }: ArtifactBoxProps): ReactElement {
-  const { refresh } = useListArtifact(characterId);
+  const { updateArtifact } = useListArtifact(characterId);
+  const defaultShowFrame = [0, 3, 6, 12, 17, 24];
+
+  const [showAll, setShowAll] = useState(false);
+  const [showFrames, setShowFrames] = useState<number[]>(defaultShowFrame);
 
   useEffect(() => {
     let intervalId: any;
 
     if (artifact.status === 'QUEUED') {
       intervalId = setInterval(() => {
-        refresh();
+        API.Artifact.getArtifact({ artifactId: artifact.id }).then(
+          ({ artifact }) => {
+            if (!artifact) return;
+            updateArtifact(artifact);
+          },
+        );
       }, 10000);
     }
 
@@ -106,90 +169,72 @@ export function ArtifactBox({
         clearInterval(intervalId);
       }
     };
-  }, [artifact.status, refresh]);
+  }, [artifact.status, artifact.id, updateArtifact]);
+
+  useEffect(() => {
+    if (!showAll) {
+      setShowFrames(defaultShowFrame);
+      return;
+    }
+    const list = Array.from(
+      { length: artifact.objectUrls.length },
+      (_, i) => i,
+    );
+    setShowFrames(list);
+  }, [showAll, artifact.objectUrls.length]);
 
   return (
-    <Stack direction="column" gap={4}>
-      <Box>
-        <ArtifactStatus status={artifact.status} />
-      </Box>
-      <Grid
-        w="full"
-        templateColumns={{ base: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }}
-        gap={{ base: 1, lg: 4 }}
-      >
-        <GridItem colSpan={1}>
-          <AspectRatio
-            ratio={1}
-            borderWidth="1px"
-            borderColor="blackAlpha.50"
-            borderRadius="8px"
-          >
-            <Image src={artifact.objectUrls[0]} />
-          </AspectRatio>
-        </GridItem>
-        <GridItem colSpan={1}>
-          <AspectRatio
-            ratio={1}
-            borderWidth="1px"
-            borderColor="blackAlpha.50"
-            borderRadius="8px"
-          >
-            <Image src={artifact.objectUrls[3]} />
-          </AspectRatio>
-        </GridItem>
-        <GridItem colSpan={1}>
-          <AspectRatio
-            ratio={1}
-            borderWidth="1px"
-            borderColor="blackAlpha.50"
-            borderRadius="8px"
-          >
-            <Image src={artifact.objectUrls[6]} />
-          </AspectRatio>
-        </GridItem>
-        <GridItem colSpan={1}>
-          <AspectRatio
-            ratio={1}
-            borderWidth="1px"
-            borderColor="blackAlpha.50"
-            borderRadius="8px"
-          >
-            <Image src={artifact.objectUrls[12]} />
-          </AspectRatio>
-        </GridItem>
-        <GridItem colSpan={1}>
-          <AspectRatio
-            ratio={1}
-            borderWidth="1px"
-            borderColor="blackAlpha.50"
-            borderRadius="8px"
-          >
-            <Image src={artifact.objectUrls[17]} />
-          </AspectRatio>
-        </GridItem>
-        <GridItem colSpan={1}>
-          <AspectRatio
-            ratio={1}
-            borderWidth="1px"
-            borderColor="blackAlpha.50"
-            borderRadius="8px"
-          >
-            <Image src={artifact.objectUrls[24]} />
-          </AspectRatio>
-        </GridItem>
-      </Grid>
-      <Flex justify="flex-end">
-        <Button
-          color="blackAlpha.700"
-          bg="transparent"
-          borderWidth="1px"
-          borderColor="blackAlpha.100"
-          borderRadius="8px"
-        >
-          すべて見る
-        </Button>
-      </Flex>
-    </Stack>
+    <>
+      <Stack direction="column" gap={4}>
+        <Box>
+          <ArtifactStatus status={artifact.status} />
+        </Box>
+        {artifact.status && (
+          <>
+            <Grid
+              w="full"
+              templateColumns={{ base: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }}
+              gap={{ base: 1, lg: 4 }}
+            >
+              {artifact.objectUrls.length > 0
+                ? showFrames.map((frame) => {
+                    return (
+                      <GridItem key={frame} colSpan={1}>
+                        <ArtifactImage
+                          src={artifact.objectUrls[frame]}
+                          accent={frame === 0}
+                        />
+                      </GridItem>
+                    );
+                  })
+                : showFrames.map((frame) => {
+                    return (
+                      <GridItem key={frame} colSpan={1}>
+                        <AspectRatio ratio={1}>
+                          <Skeleton w="full" />
+                        </AspectRatio>
+                      </GridItem>
+                    );
+                  })}
+            </Grid>
+            {artifact.status !== 'QUEUED' &&
+              artifact.status !== 'GENERATING' && (
+                <Flex justify="flex-end">
+                  <Button
+                    color="blackAlpha.700"
+                    bg="transparent"
+                    borderWidth="1px"
+                    borderColor="blackAlpha.100"
+                    borderRadius="8px"
+                    onClick={() => setShowAll(!showAll)}
+                  >
+                    {showAll ? '閉じる' : 'すべて見る'}
+                  </Button>
+                </Flex>
+              )}
+          </>
+        )}
+      </Stack>
+    </>
   );
 }
