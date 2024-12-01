@@ -1,4 +1,4 @@
-import type { CreateRunpodType } from '@/libraries/runpod';
+import type { RunpodClient } from '@/libraries/runpod';
 import {
   contextKeyBucketName,
   contextKeyOriginUrl,
@@ -18,7 +18,7 @@ type Props = {
   originUrl: string;
   prisma: PrismaClient;
   r2: S3Client;
-  runpod: CreateRunpodType;
+  runpod: RunpodClient;
   generateDownloadUrl: (r2: S3Client, path: string) => Promise<string>;
 };
 

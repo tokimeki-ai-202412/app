@@ -1,4 +1,4 @@
-import { CreateRunpod, type CreateRunpodType } from '@/libraries/runpod';
+import { CreateRunpod, type RunpodClient } from '@/libraries/runpod';
 import {
   contextKeyBucketName,
   contextKeyOriginUrl,
@@ -44,11 +44,8 @@ function initR2(): S3Client {
   });
 }
 
-function initRunpod(): CreateRunpodType {
-  return CreateRunpod(
-    getRequestContext().env.RUNPOD_API_TOKEN,
-    getRequestContext().env.RUNPOD_ENDPOINT_HI3D_FIRST_MODEL_512,
-  );
+function initRunpod(): RunpodClient {
+  return CreateRunpod(getRequestContext().env.RUNPOD_API_TOKEN);
 }
 
 export function POST(req: NextRequest) {

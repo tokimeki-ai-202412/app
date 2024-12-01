@@ -16,17 +16,17 @@ export type JobStatusResult = {
   [key: string]: any; // Additional response properties
 };
 
-export type CreateRunpodType = {
-  createJob: (data: any) => Promise<CreateJobResult>;
-  cancelJob: (jobId: string) => Promise<void>;
-  getJobStatus: (jobId: string) => Promise<JobStatusResult>;
+export type RunpodClient = {
+  createJob: (endpointId: string, data: any) => Promise<CreateJobResult>;
+  cancelJob: (endpointId: string, jobId: string) => Promise<void>;
+  getJobStatus: (endpointId: string, jobId: string) => Promise<JobStatusResult>;
 };
 
-export function CreateRunpod(
-  token: string,
-  endpointId: string,
-): CreateRunpodType {
-  async function createJob(data: any): Promise<CreateJobResult> {
+export function CreateRunpod(token: string): RunpodClient {
+  async function createJob(
+    endpointId: string,
+    data: any,
+  ): Promise<CreateJobResult> {
     const url = `https://api.runpod.ai/v2/${endpointId}/run`;
 
     try {
@@ -51,7 +51,7 @@ export function CreateRunpod(
     }
   }
 
-  async function cancelJob(jobId: string): Promise<void> {
+  async function cancelJob(endpointId: string, jobId: string): Promise<void> {
     const url = `https://api.runpod.ai/v2/${endpointId}/cancel/${jobId}`;
 
     try {
@@ -75,7 +75,10 @@ export function CreateRunpod(
     }
   }
 
-  async function getJobStatus(jobId: string): Promise<JobStatusResult> {
+  async function getJobStatus(
+    endpointId: string,
+    jobId: string,
+  ): Promise<JobStatusResult> {
     const url = `https://api.runpod.ai/v2/${endpointId}/status/${jobId}`;
 
     try {
