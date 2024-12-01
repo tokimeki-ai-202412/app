@@ -265,7 +265,7 @@ export const listArtifacts: (
         userId,
       },
       orderBy: {
-        createdAt: 'asc',
+        createdAt: 'desc',
       },
     })
     .catch(() => {
