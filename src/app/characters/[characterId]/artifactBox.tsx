@@ -98,14 +98,13 @@ function ArtifactImage({ src, accent }: ArtifactPreviewProps): ReactElement {
   return (
     <>
       <Box as="label" w="full" cursor="pointer">
-        <AspectRatio
-          ratio={1}
+        <Box
           borderWidth={accent ? '2px' : '1px'}
           borderColor={accent ? '#f0acac' : 'blackAlpha.100'}
           borderRadius="8px"
         >
           <Image src={src} />
-        </AspectRatio>
+        </Box>
         <Button
           style={{
             display: 'none',
@@ -197,39 +196,40 @@ export function ArtifactBox({
               {artifact.objectUrls.length > 0
                 ? showFrames.map((frame) => {
                     return (
-                      <GridItem key={frame} colSpan={1}>
-                        <ArtifactImage
-                          src={artifact.objectUrls[frame]}
-                          accent={false}
-                        />
-                      </GridItem>
+                      <AspectRatio key={frame} ratio={1}>
+                        <GridItem colSpan={1}>
+                          <ArtifactImage
+                            src={artifact.objectUrls[frame]}
+                            accent={false}
+                          />
+                        </GridItem>
+                      </AspectRatio>
                     );
                   })
                 : showFrames.map((frame) => {
                     return (
-                      <GridItem key={frame} colSpan={1}>
-                        <AspectRatio ratio={1}>
-                          <Skeleton w="full" />
-                        </AspectRatio>
-                      </GridItem>
+                      <AspectRatio key={frame} ratio={1}>
+                        <GridItem colSpan={1}>
+                          <Skeleton boxSize="full" />
+                        </GridItem>
+                      </AspectRatio>
                     );
                   })}
             </Grid>
-            {artifact.status !== 'QUEUED' &&
-              artifact.status !== 'GENERATING' && (
-                <Flex justify="flex-end">
-                  <Button
-                    color="blackAlpha.700"
-                    bg="transparent"
-                    borderWidth="1px"
-                    borderColor="blackAlpha.100"
-                    borderRadius="8px"
-                    onClick={() => setShowAll(!showAll)}
-                  >
-                    {showAll ? '閉じる' : 'すべて見る'}
-                  </Button>
-                </Flex>
-              )}
+            {artifact.status === 'DONE' && (
+              <Flex justify="flex-end">
+                <Button
+                  color="blackAlpha.700"
+                  bg="transparent"
+                  borderWidth="1px"
+                  borderColor="blackAlpha.100"
+                  borderRadius="8px"
+                  onClick={() => setShowAll(!showAll)}
+                >
+                  {showAll ? '閉じる' : 'すべて見る'}
+                </Button>
+              </Flex>
+            )}
           </>
         )}
       </Stack>
