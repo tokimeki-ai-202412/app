@@ -14,6 +14,7 @@ import type {
 import type { Artifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
 import { GetProps } from '@/server/props.ts';
 import {
+  DeleteObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
@@ -224,8 +225,60 @@ export const createArtifact: (
 export const deleteArtifact: (
   req: DeleteArtifactRequest,
   ctx: HandlerContext,
-) => Promise<DeleteArtifactResponse> = async () => {
-  await wait(100);
+) => Promise<DeleteArtifactResponse> = async (req, ctx) => {
+  const { userId, prisma, r2, bucketName } = GetProps(ctx);
+  if (!userId) {
+    throw new ConnectError('Unauthenticated', Code.Unauthenticated);
+  }
+
+  // Get artifact
+  const artifact = await prisma.artifact
+    .findFirstOrThrow({
+      where: {
+        id: req.artifactId,
+        userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Artifact not found', Code.NotFound);
+    });
+
+  // Cleanup artifact objects
+  const command = new ListObjectsV2Command({
+    Bucket: bucketName,
+    Prefix: `artifacts/${artifact.id}/`,
+    Delimiter: '/',
+  });
+  const response = await r2.send(command).catch(() => {
+    throw new ConnectError('Failed to fetch artifact objects.', Code.Internal);
+  });
+  if (response.Contents) {
+    const results = response.Contents.map((item) => item.Key);
+    const files = results.filter((item): item is string => item !== undefined);
+    // Delete all files
+    if (files.length > 0) {
+      const deleteCommand = new DeleteObjectsCommand({
+        Bucket: bucketName,
+        Delete: {
+          Objects: files.map((key) => ({ Key: key })),
+        },
+      });
+      await r2.send(deleteCommand).catch(() => {
+        throw new ConnectError(
+          'Failed to delete artifact objects.',
+          Code.Internal,
+        );
+      });
+    }
+  }
+
+  // Delete artifacts related to the character
+  await prisma.artifact.delete({
+    where: {
+      id: artifact.id,
+    },
+  });
+
   return {} as DeleteArtifactResponse;
 };
 
