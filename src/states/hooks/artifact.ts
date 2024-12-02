@@ -40,6 +40,7 @@ export function useListArtifact(id: string): {
   artifacts: Omit<Artifact, keyof Message>[] | null;
   refresh: () => void;
   updateArtifact: (artifact: Artifact) => void;
+  deleteArtifact: (artifactId: string) => void;
 } {
   const [artifacts, setArtifacts] = useAtom(listArtifactAtom(id));
   const [value, refresh] = useAtom(listArtifactSelectorWithRefresh(id));
@@ -72,5 +73,15 @@ export function useListArtifact(id: string): {
     [setArtifacts],
   );
 
-  return { loading, artifacts, refresh, updateArtifact };
+  const deleteArtifact = useCallback(
+    (artifactId: string) => {
+      setArtifacts((prevArtifacts) => {
+        if (!prevArtifacts) return prevArtifacts;
+        return prevArtifacts.filter((artifact) => artifact.id !== artifactId);
+      });
+    },
+    [setArtifacts],
+  );
+
+  return { loading, artifacts, refresh, updateArtifact, deleteArtifact };
 }

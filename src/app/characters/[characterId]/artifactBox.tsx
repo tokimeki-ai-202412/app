@@ -152,12 +152,12 @@ function ArtifactMenu({
   artifact,
   characterId,
 }: ArtifactMenuProps): ReactElement {
-  const { updateArtifact } = useListArtifact(characterId);
+  const { updateArtifact, deleteArtifact } = useListArtifact(characterId);
   const [loading, setLoading] = useState(false);
 
   async function onCancel(artifactId: string) {
     setLoading(true);
-    await API.Artifact.cancelArtifact({ artifactId: artifactId });
+    await API.Artifact.cancelArtifact({ artifactId });
 
     // Update artifact
     const updated = await API.Artifact.getArtifact({
@@ -213,6 +213,14 @@ function ArtifactMenu({
     setLoading(false);
   }
 
+  async function onDelete(artifactId: string) {
+    setLoading(true);
+    await API.Artifact.deleteArtifact({ artifactId });
+
+    deleteArtifact(artifactId);
+    setLoading(false);
+  }
+
   return (
     <MenuRoot>
       <MenuTrigger asChild={true}>
@@ -223,6 +231,8 @@ function ArtifactMenu({
           borderWidth="1px"
           borderColor="blackAlpha.100"
           focusVisibleRing="none"
+          disabled={loading}
+          loading={loading}
         >
           <HStack fontSize="1.1em">
             <Icon icon="hugeicons:menu-03" />
@@ -243,13 +253,24 @@ function ArtifactMenu({
         )}
         {artifact.status === 'DONE' && (
           <MenuItem
-            value="cancel"
+            value="download"
             color="blackAlpha.700"
             onClick={() => onDownloadAsZip(artifact.objectUrls)}
             disabled={loading}
           >
             <Icon icon="humbleicons:download" />
             ZIPでダウンロード
+          </MenuItem>
+        )}
+        {artifact.status !== 'QUEUED' && artifact.status !== 'GENERATING' && (
+          <MenuItem
+            value="delete"
+            color="#F28B82"
+            onClick={() => onDelete(artifact.id)}
+            disabled={loading}
+          >
+            <Icon icon="mdi:delete-outline" />
+            削除
           </MenuItem>
         )}
       </MenuContent>
