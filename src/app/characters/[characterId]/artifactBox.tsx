@@ -5,6 +5,12 @@ import {
   DialogRoot,
   DialogTrigger,
 } from '@/components/ui/dialog.tsx';
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from '@/components/ui/menu';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { API } from '@/libraries/connect-client';
 import type { Artifact as TypeArtifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
@@ -16,11 +22,16 @@ import {
   Flex,
   Grid,
   GridItem,
+  HStack,
+  IconButton,
   Image,
   Spinner,
   Stack,
   Text,
+  VStack,
 } from '@chakra-ui/react';
+import { Icon } from '@iconify-icon/react';
+import JSZip from 'jszip';
 import { type ReactElement, useEffect, useState } from 'react';
 
 type ArtifactStatusProps = {
@@ -132,6 +143,120 @@ function ArtifactImage({ src, accent }: ArtifactPreviewProps): ReactElement {
   );
 }
 
+type ArtifactMenuProps = {
+  artifact: Omit<TypeArtifact, keyof Message>;
+  characterId: string;
+};
+
+function ArtifactMenu({
+  artifact,
+  characterId,
+}: ArtifactMenuProps): ReactElement {
+  const { updateArtifact } = useListArtifact(characterId);
+  const [loading, setLoading] = useState(false);
+
+  async function onCancel(artifactId: string) {
+    setLoading(true);
+    await API.Artifact.cancelArtifact({ artifactId: artifactId });
+
+    // Update artifact
+    const updated = await API.Artifact.getArtifact({
+      artifactId: artifactId,
+    });
+
+    if (!updated.artifact) return;
+    updateArtifact(updated.artifact);
+    setLoading(false);
+  }
+
+  async function onDownloadAsZip(imageUrls: string[]) {
+    setLoading(true);
+
+    const zip = new JSZip();
+    for (let i = 0; i < imageUrls.length; i++) {
+      const mimeToExtension: Record<string, string> = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+      };
+
+      const url = imageUrls[i];
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch image.');
+        }
+
+        const blob = await response.blob();
+        const contentType = response.headers.get('Content-Type') || 'unknown';
+        const extension: string = mimeToExtension[contentType] || '.jpg'; // MIME タイプから拡張子を取得し、デフォルトは .jpg
+        const fileName = `${i + 1}${extension}`;
+
+        zip.file(fileName, blob);
+      } catch (error) {
+        throw new Error('Failed to create zip.');
+      }
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = `${artifact.id}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    setLoading(false);
+  }
+
+  return (
+    <MenuRoot>
+      <MenuTrigger asChild={true}>
+        <Button
+          size="2xs"
+          color="blackAlpha.500"
+          bg="transparent"
+          borderWidth="1px"
+          borderColor="blackAlpha.100"
+          focusVisibleRing="none"
+        >
+          <HStack fontSize="1.1em">
+            <Icon icon="hugeicons:menu-03" />
+          </HStack>
+        </Button>
+      </MenuTrigger>
+      <MenuContent>
+        {(artifact.status === 'QUEUED' || artifact.status === 'GENERATING') && (
+          <MenuItem
+            value="cancel"
+            color="blackAlpha.700"
+            onClick={() => onCancel(artifact.id)}
+            disabled={loading}
+          >
+            <Icon icon="material-symbols-light:cancel-outline" />
+            生成をキャンセル
+          </MenuItem>
+        )}
+        {artifact.status === 'DONE' && (
+          <MenuItem
+            value="cancel"
+            color="blackAlpha.700"
+            onClick={() => onDownloadAsZip(artifact.objectUrls)}
+            disabled={loading}
+          >
+            <Icon icon="humbleicons:download" />
+            ZIPでダウンロード
+          </MenuItem>
+        )}
+      </MenuContent>
+    </MenuRoot>
+  );
+}
+
 type ArtifactBoxProps = {
   artifact: Omit<TypeArtifact, keyof Message>;
   characterId: string;
@@ -183,9 +308,10 @@ export function ArtifactBox({
   return (
     <>
       <Stack direction="column" gap={4}>
-        <Box>
+        <Flex align="center" justify="space-between">
           <ArtifactStatus status={artifact.status} />
-        </Box>
+          <ArtifactMenu artifact={artifact} characterId={characterId} />
+        </Flex>
         {artifact.status && (
           <>
             <Grid
