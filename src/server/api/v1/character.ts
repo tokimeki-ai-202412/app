@@ -240,6 +240,9 @@ export const listCharacters: (
     where: {
       userId,
     },
+    orderBy: {
+      createdAt: 'desc',
+    },
   });
 
   // Prepare results

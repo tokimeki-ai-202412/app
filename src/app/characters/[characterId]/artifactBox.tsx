@@ -5,6 +5,12 @@ import {
   DialogRoot,
   DialogTrigger,
 } from '@/components/ui/dialog.tsx';
+import {
+  MenuContent,
+  MenuItem,
+  MenuRoot,
+  MenuTrigger,
+} from '@/components/ui/menu';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { API } from '@/libraries/connect-client';
 import type { Artifact as TypeArtifact } from '@/libraries/connect-gen/model/v1/artifact_pb.ts';
@@ -16,11 +22,16 @@ import {
   Flex,
   Grid,
   GridItem,
+  HStack,
+  IconButton,
   Image,
   Spinner,
   Stack,
   Text,
+  VStack,
 } from '@chakra-ui/react';
+import { Icon } from '@iconify-icon/react';
+import JSZip from 'jszip';
 import { type ReactElement, useEffect, useState } from 'react';
 
 type ArtifactStatusProps = {
@@ -98,14 +109,13 @@ function ArtifactImage({ src, accent }: ArtifactPreviewProps): ReactElement {
   return (
     <>
       <Box as="label" w="full" cursor="pointer">
-        <AspectRatio
-          ratio={1}
+        <Box
           borderWidth={accent ? '2px' : '1px'}
           borderColor={accent ? '#f0acac' : 'blackAlpha.100'}
           borderRadius="8px"
         >
           <Image src={src} />
-        </AspectRatio>
+        </Box>
         <Button
           style={{
             display: 'none',
@@ -130,6 +140,120 @@ function ArtifactImage({ src, accent }: ArtifactPreviewProps): ReactElement {
         </DialogContent>
       </DialogRoot>
     </>
+  );
+}
+
+type ArtifactMenuProps = {
+  artifact: Omit<TypeArtifact, keyof Message>;
+  characterId: string;
+};
+
+function ArtifactMenu({
+  artifact,
+  characterId,
+}: ArtifactMenuProps): ReactElement {
+  const { updateArtifact } = useListArtifact(characterId);
+  const [loading, setLoading] = useState(false);
+
+  async function onCancel(artifactId: string) {
+    setLoading(true);
+    await API.Artifact.cancelArtifact({ artifactId: artifactId });
+
+    // Update artifact
+    const updated = await API.Artifact.getArtifact({
+      artifactId: artifactId,
+    });
+
+    if (!updated.artifact) return;
+    updateArtifact(updated.artifact);
+    setLoading(false);
+  }
+
+  async function onDownloadAsZip(imageUrls: string[]) {
+    setLoading(true);
+
+    const zip = new JSZip();
+    for (let i = 0; i < imageUrls.length; i++) {
+      const mimeToExtension: Record<string, string> = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+      };
+
+      const url = imageUrls[i];
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch image.');
+        }
+
+        const blob = await response.blob();
+        const contentType = response.headers.get('Content-Type') || 'unknown';
+        const extension: string = mimeToExtension[contentType] || '.jpg'; // MIME タイプから拡張子を取得し、デフォルトは .jpg
+        const fileName = `${i + 1}${extension}`;
+
+        zip.file(fileName, blob);
+      } catch (error) {
+        throw new Error('Failed to create zip.');
+      }
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = `${artifact.id}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    setLoading(false);
+  }
+
+  return (
+    <MenuRoot>
+      <MenuTrigger asChild={true}>
+        <Button
+          size="2xs"
+          color="blackAlpha.500"
+          bg="transparent"
+          borderWidth="1px"
+          borderColor="blackAlpha.100"
+          focusVisibleRing="none"
+        >
+          <HStack fontSize="1.1em">
+            <Icon icon="hugeicons:menu-03" />
+          </HStack>
+        </Button>
+      </MenuTrigger>
+      <MenuContent>
+        {(artifact.status === 'QUEUED' || artifact.status === 'GENERATING') && (
+          <MenuItem
+            value="cancel"
+            color="blackAlpha.700"
+            onClick={() => onCancel(artifact.id)}
+            disabled={loading}
+          >
+            <Icon icon="material-symbols-light:cancel-outline" />
+            生成をキャンセル
+          </MenuItem>
+        )}
+        {artifact.status === 'DONE' && (
+          <MenuItem
+            value="cancel"
+            color="blackAlpha.700"
+            onClick={() => onDownloadAsZip(artifact.objectUrls)}
+            disabled={loading}
+          >
+            <Icon icon="humbleicons:download" />
+            ZIPでダウンロード
+          </MenuItem>
+        )}
+      </MenuContent>
+    </MenuRoot>
   );
 }
 
@@ -184,9 +308,10 @@ export function ArtifactBox({
   return (
     <>
       <Stack direction="column" gap={4}>
-        <Box>
+        <Flex align="center" justify="space-between">
           <ArtifactStatus status={artifact.status} />
-        </Box>
+          <ArtifactMenu artifact={artifact} characterId={characterId} />
+        </Flex>
         {artifact.status && (
           <>
             <Grid
@@ -197,39 +322,40 @@ export function ArtifactBox({
               {artifact.objectUrls.length > 0
                 ? showFrames.map((frame) => {
                     return (
-                      <GridItem key={frame} colSpan={1}>
-                        <ArtifactImage
-                          src={artifact.objectUrls[frame]}
-                          accent={false}
-                        />
-                      </GridItem>
+                      <AspectRatio key={frame} ratio={1}>
+                        <GridItem colSpan={1}>
+                          <ArtifactImage
+                            src={artifact.objectUrls[frame]}
+                            accent={false}
+                          />
+                        </GridItem>
+                      </AspectRatio>
                     );
                   })
                 : showFrames.map((frame) => {
                     return (
-                      <GridItem key={frame} colSpan={1}>
-                        <AspectRatio ratio={1}>
-                          <Skeleton w="full" />
-                        </AspectRatio>
-                      </GridItem>
+                      <AspectRatio key={frame} ratio={1}>
+                        <GridItem colSpan={1}>
+                          <Skeleton boxSize="full" />
+                        </GridItem>
+                      </AspectRatio>
                     );
                   })}
             </Grid>
-            {artifact.status !== 'QUEUED' &&
-              artifact.status !== 'GENERATING' && (
-                <Flex justify="flex-end">
-                  <Button
-                    color="blackAlpha.700"
-                    bg="transparent"
-                    borderWidth="1px"
-                    borderColor="blackAlpha.100"
-                    borderRadius="8px"
-                    onClick={() => setShowAll(!showAll)}
-                  >
-                    {showAll ? '閉じる' : 'すべて見る'}
-                  </Button>
-                </Flex>
-              )}
+            {artifact.status === 'DONE' && (
+              <Flex justify="flex-end">
+                <Button
+                  color="blackAlpha.700"
+                  bg="transparent"
+                  borderWidth="1px"
+                  borderColor="blackAlpha.100"
+                  borderRadius="8px"
+                  onClick={() => setShowAll(!showAll)}
+                >
+                  {showAll ? '閉じる' : 'すべて見る'}
+                </Button>
+              </Flex>
+            )}
           </>
         )}
       </Stack>
