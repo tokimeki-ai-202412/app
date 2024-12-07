@@ -2,17 +2,20 @@ type ModelData = {
   id: string;
   name: string;
   endpoint: string;
+  cost: number;
 };
 
 export const modelData: ModelData[] = [
   {
     id: 'first_model_512px',
-    name: '（デモ用）First Model - 512px',
-    endpoint: 'lddinefmzo50ox',
+    name: 'はじまりのモデル',
+    endpoint: 'k09ny32a6a311g',
+    cost: 0,
   },
   {
-    id: 'girls_pose100_512px',
-    name: 'Girls Pose100 - 512px',
-    endpoint: '9dnmo3fn6qhixy',
+    id: 'girls_pose100_1024px',
+    name: 'Girls Pose100 (1024px)',
+    endpoint: 'fhz6mckqe7vwqc',
+    cost: 1,
   },
 ];
