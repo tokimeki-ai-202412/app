@@ -24,14 +24,20 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Code, ConnectError, type HandlerContext } from '@connectrpc/connect';
 import { ArtifactStatus } from '@prisma/client';
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 function getEndpointById(id: string): string {
   const model = modelData.find((m) => m.id === id);
   if (!model) {
     throw new ConnectError('Model not found', Code.NotFound);
   }
   return model.endpoint;
+}
+
+function getCostById(id: string): number {
+  const model = modelData.find((m) => m.id === id);
+  if (!model) {
+    throw new ConnectError('Model not found', Code.NotFound);
+  }
+  return model.cost;
 }
 
 async function createObjectUrls(
@@ -143,6 +149,24 @@ export const createArtifact: (
     throw new ConnectError('Invalid image.', Code.InvalidArgument);
   }
 
+  // Check user have enough jewels.
+  const user = await prisma.user
+    .findFirstOrThrow({
+      where: {
+        id: userId,
+      },
+    })
+    .catch(() => {
+      throw new ConnectError('Failed to find user.', Code.Internal);
+    });
+  const cost = getCostById(req.input.modelName);
+  if (user.jewelRemain < cost) {
+    throw new ConnectError(
+      'You dont have enough jewels.',
+      Code.PermissionDenied,
+    );
+  }
+
   // Get model endpoint
   const endpoint = getEndpointById(req.input.modelName);
 
@@ -213,6 +237,22 @@ export const createArtifact: (
       jobId,
     },
   });
+
+  // Subtract cost from the user current jewel balance
+  if (cost > 0) {
+    await prisma.user
+      .update({
+        where: {
+          id: userId,
+        },
+        data: {
+          jewelRemain: user.jewelRemain - cost,
+        },
+      })
+      .catch(() => {
+        throw new ConnectError('Failed to update user.', Code.Internal);
+      });
+  }
 
   return {
     artifact: {
@@ -286,7 +326,7 @@ export const getArtifact: (
   req: GetArtifactRequest,
   ctx: HandlerContext,
 ) => Promise<GetArtifactResponse> = async (req, ctx) => {
-  const { userId, prisma, r2 } = GetProps(ctx);
+  const { userId, prisma, r2, runpod } = GetProps(ctx);
   if (!userId) {
     throw new ConnectError('Unauthenticated', Code.Unauthenticated);
   }
