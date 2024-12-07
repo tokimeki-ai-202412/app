@@ -1,5 +1,6 @@
 'use client';
 
+import { Alert } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   SelectContent,
@@ -17,6 +18,7 @@ import {
   AspectRatio,
   Box,
   Container,
+  Flex,
   GridItem,
   Heading,
   Image,
@@ -26,6 +28,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { createListCollection } from '@chakra-ui/react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 
@@ -45,7 +48,7 @@ type Props = {
 };
 
 export default function Page({ params: { characterId } }: Props): ReactElement {
-  const { user } = useWhois();
+  const { user, refresh: refreshUser } = useWhois();
   const { refresh } = useListArtifact(characterId);
   const [thumbnail, setThumbnail] = useState<string>('/sample.png');
   const [modelName, setModelName] = useState<string[]>([modelData[1].id]);
@@ -97,6 +100,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
       setFile(null);
 
       refresh();
+      refreshUser();
       router.push(`/characters/${characterId}`);
     } catch (e) {
       console.log(e);
@@ -178,11 +182,21 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
             </SimpleGrid>
             <Spacer />
             <SimpleGrid w="full" gap={4}>
-              <GridItem>
-                <Text textAlign="center" opacity={0.6}>
-                  生成時間の目安：5分
-                </Text>
-              </GridItem>
+              {user && user.jewelRemain < 1 && (
+                <GridItem>
+                  <Alert status="info" title="1024pxでの生成について">
+                    現在、1人あたりの使用回数を制限しています。
+                    <Link
+                      href="https://forms.gle/N4mQTi1ytGL51JnYA"
+                      target="_blank"
+                    >
+                      <Text color="#f0acac" fontWeight={700}>
+                        今後にご期待ください。
+                      </Text>
+                    </Link>
+                  </Alert>
+                </GridItem>
+              )}
               <GridItem>
                 <Button
                   w="full"
