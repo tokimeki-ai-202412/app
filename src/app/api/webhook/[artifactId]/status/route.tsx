@@ -70,21 +70,21 @@ export async function POST(
       return NextResponse.json({ error: 'Status is locked.' }, { status: 423 });
     }
 
-    // Job should be suspended
-    if (new Date(artifact.createdAt) < new Date(Date.now() - 10 * 60 * 1000)) {
-      await prisma.artifact.update({
-        where: {
-          id: artifact.id,
-        },
-        data: {
-          status: ArtifactStatus.ERROR,
-        },
-      });
-      return NextResponse.json(null, { status: 200 });
-    }
-
     const runpod = initRunpod();
-    const { status } = await runpod.getJobStatus(endpoint, artifact.jobId);
+    const { status } = await runpod
+      .getJobStatus(endpoint, artifact.jobId)
+      .catch(async () => {
+        await prisma.artifact.update({
+          where: {
+            id: artifact.id,
+          },
+          data: {
+            status: ArtifactStatus.ERROR,
+          },
+        });
+
+        return NextResponse.json(null, { status: 500 });
+      });
 
     if (status !== 'IN_PROGRESS') {
       return NextResponse.json(null, { status: 200 });
