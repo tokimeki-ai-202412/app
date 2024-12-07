@@ -105,7 +105,7 @@ export default function Page({ params: { characterId } }: Props): ReactElement {
   }
 
   return (
-    <Container px={8} py={4} maxW={{ base: '1024px' }}>
+    <Container py={4} maxW={{ base: '1024px' }}>
       <SimpleGrid pb={8} gap={4}>
         <GridItem>
           <Heading
