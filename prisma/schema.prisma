@@ -4,17 +4,18 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
   //shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
-  relationMode = "prisma"
+  relationMode      = "prisma"
 }
 
 model User {
-  id        String   @id @default(uuid())
-  googleId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  googleId    String
+  jewelRemain Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Session {

@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
       await prisma.user.create({
         data: {
           googleId,
+          jewelRemain: 3,
         },
       });
     }

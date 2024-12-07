@@ -26,6 +26,7 @@ export const whois: (
   return {
     user: {
       id: user.id,
+      jewelRemain: user.jewelRemain,
     },
   } as WhoisResponse;
 };
