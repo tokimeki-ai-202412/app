@@ -23,16 +23,17 @@ import {
   Grid,
   GridItem,
   HStack,
-  IconButton,
   Image,
   Spinner,
   Stack,
   Text,
-  VStack,
 } from '@chakra-ui/react';
 import { Icon } from '@iconify-icon/react';
 import JSZip from 'jszip';
+import { motion } from 'motion/react';
 import { type ReactElement, useEffect, useState } from 'react';
+
+const MotionImage = motion(Image);
 
 type ArtifactStatusProps = {
   status: string;
@@ -105,16 +106,32 @@ type ArtifactPreviewProps = {
 
 function ArtifactImage({ src, accent }: ArtifactPreviewProps): ReactElement {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   return (
     <>
-      <Box as="label" w="full" cursor="pointer">
+      <Box as="label" w="full" h="full" cursor="pointer">
         <Box
+          w="full"
+          h="full"
           borderWidth={accent ? '2px' : '1px'}
           borderColor={accent ? '#f0acac' : 'blackAlpha.100'}
           borderRadius="8px"
         >
-          <Image src={src} />
+          <Skeleton w="full" h="full" loading={!isLoaded}>
+            <MotionImage
+              src={src}
+              initial={{ opacity: 0 }}
+              animate={isLoaded ? { opacity: 1 } : {}}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              onLoad={() => setIsLoaded(true)}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: isLoaded ? 'block' : 'none',
+              }} // ロード中は非表示
+            />
+          </Skeleton>
         </Box>
         <Button
           style={{

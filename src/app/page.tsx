@@ -45,7 +45,7 @@ export default function Page(): ReactElement {
           {user ? (
             <Link href={'/characters/new'}>
               <Button w="full" size="2xl">
-                生成する
+                キャラクターを追加する
               </Button>
             </Link>
           ) : (
