@@ -20,6 +20,11 @@ export class ArtifactInput extends Message<ArtifactInput> {
    */
   modelName = "";
 
+  /**
+   * @generated from field: int32 elevation = 3;
+   */
+  elevation = 0;
+
   constructor(data?: PartialMessage<ArtifactInput>) {
     super();
     proto3.util.initPartial(data, this);
@@ -30,6 +35,7 @@ export class ArtifactInput extends Message<ArtifactInput> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "image_path", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "model_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "elevation", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ArtifactInput {
