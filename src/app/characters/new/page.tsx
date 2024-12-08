@@ -125,11 +125,11 @@ export default function Page(): ReactElement {
             bg="blackAlpha.50"
           >
             <Box as="label" w="full" cursor="pointer">
-              <AspectRatio ratio={1}>
+              <AspectRatio w="full" h="full" ratio={1}>
                 <Image
-                  w="full"
                   src={thumbnail}
                   opacity={thumbnail === '/sample.png' ? 0.15 : 1}
+                  style={{ objectFit: 'contain' }}
                 />
               </AspectRatio>
               <input
