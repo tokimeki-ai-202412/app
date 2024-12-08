@@ -148,6 +148,10 @@ export const createArtifact: (
   if (!req.input.imagePath.startsWith('temporary/')) {
     throw new ConnectError('Invalid image.', Code.InvalidArgument);
   }
+  const validElevations = [-10, 0, 10, 20, 30, 40];
+  if (!validElevations.includes(req.input.elevation)) {
+    throw new ConnectError('Invalid elevation.', Code.InvalidArgument);
+  }
 
   // Check user have enough jewels.
   const user = await prisma.user
@@ -220,6 +224,7 @@ export const createArtifact: (
     input: {
       image_path: req.input.imagePath,
       artifact_id: artifact.id,
+      elevation: req.input.elevation,
     },
     webhook: `${originUrl}/api/webhook/${artifact.id}`,
   };
