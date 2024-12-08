@@ -8,7 +8,7 @@ type ModelData = {
 export const modelData: ModelData[] = [
   {
     id: 'first_model_512px',
-    name: 'はじまりのモデル',
+    name: 'はじまりのモデル (512px)',
     endpoint: 'k09ny32a6a311g',
     cost: 0,
   },
