@@ -10,25 +10,17 @@ import { Router } from '@/server/router';
 import { S3Client } from '@aws-sdk/client-s3';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { createContextValues } from '@connectrpc/connect';
-import { Client } from '@planetscale/database';
-import { PrismaPlanetScale } from '@prisma/adapter-planetscale';
 import { PrismaClient } from '@prisma/client';
 import type { NextRequest } from 'next/server';
+
+import { connect } from "@tidbcloud/serverless";
+import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
 
 export const runtime = 'edge';
 
 function initPrismaClient(): PrismaClient {
-  const client = new Client({
-    url: getRequestContext().env.DATABASE_URL,
-    fetch: (url, init) => {
-      if (init) {
-        // biome-ignore lint/performance/noDelete: <explanation>
-        delete init['cache'];
-      }
-      return fetch(url, init);
-    },
-  });
-  const adapter = new PrismaPlanetScale(client);
+  const connection = connect({ url: getRequestContext().env.DATABASE_URL });
+  const adapter = new PrismaTiDBCloud(connection);
   // @ts-ignore
   return new PrismaClient({ adapter });
 }

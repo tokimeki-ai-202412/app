@@ -2,10 +2,10 @@ import { modelData } from '@/const/model.ts';
 import { CreateRunpod, type RunpodClient } from '@/libraries/runpod';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { Code, ConnectError } from '@connectrpc/connect';
-import { Client } from '@planetscale/database';
-import { PrismaPlanetScale } from '@prisma/adapter-planetscale';
 import { ArtifactStatus, PrismaClient } from '@prisma/client';
 import { type NextRequest, NextResponse } from 'next/server';
+import {connect} from "@tidbcloud/serverless";
+import {PrismaTiDBCloud} from "@tidbcloud/prisma-adapter";
 
 export const runtime = 'edge';
 
@@ -18,17 +18,8 @@ function getEndpointById(id: string): string {
 }
 
 function initPrismaClient(): PrismaClient {
-  const client = new Client({
-    url: getRequestContext().env.DATABASE_URL,
-    fetch: (url, init) => {
-      if (init) {
-        // biome-ignore lint/performance/noDelete: <explanation>
-        delete init['cache'];
-      }
-      return fetch(url, init);
-    },
-  });
-  const adapter = new PrismaPlanetScale(client);
+  const connection = connect({ url: getRequestContext().env.DATABASE_URL });
+  const adapter = new PrismaTiDBCloud(connection);
   // @ts-ignore
   return new PrismaClient({ adapter });
 }
