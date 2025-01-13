@@ -4,26 +4,17 @@ import {
   extractAuthReturn,
 } from '@/libraries/openid';
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { Client } from '@planetscale/database';
-import { PrismaPlanetScale } from '@prisma/adapter-planetscale';
 import { PrismaClient } from '@prisma/client';
+import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
+import { connect } from '@tidbcloud/serverless';
 import { type SerializeOptions, serialize } from 'cookie';
 import type { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
 function initPrismaClient(): PrismaClient {
-  const client = new Client({
-    url: getRequestContext().env.DATABASE_URL,
-    fetch: (url, init) => {
-      if (init) {
-        // biome-ignore lint/performance/noDelete: <explanation>
-        delete init['cache'];
-      }
-      return fetch(url, init);
-    },
-  });
-  const adapter = new PrismaPlanetScale(client);
+  const connection = connect({ url: getRequestContext().env.DATABASE_URL });
+  const adapter = new PrismaTiDBCloud(connection);
   // @ts-ignore
   return new PrismaClient({ adapter });
 }

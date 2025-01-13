@@ -1579,10 +1579,22 @@
   resolved "https://registry.yarnpkg.com/@prisma/client/-/client-5.22.0.tgz#da1ca9c133fbefe89e0da781c75e1c59da5f8802"
   integrity sha512-M0SVXfyHnQREBKxCgyo7sffrKttwE6R8PMq330MIUF0pTwjUhLbW84pFDlf06B27XyCR++VtjugEnIHdr07SVA==
 
+"@prisma/debug@5.20.0":
+  version "5.20.0"
+  resolved "https://registry.yarnpkg.com/@prisma/debug/-/debug-5.20.0.tgz#c6d1cf6e3c6e9dba150347f13ca200b1d66cc9fc"
+  integrity sha512-oCx79MJ4HSujokA8S1g0xgZUGybD4SyIOydoHMngFYiwEwYDQ5tBQkK5XoEHuwOYDKUOKRn/J0MEymckc4IgsQ==
+
 "@prisma/debug@5.22.0":
   version "5.22.0"
   resolved "https://registry.yarnpkg.com/@prisma/debug/-/debug-5.22.0.tgz#58af56ed7f6f313df9fb1042b6224d3174bbf412"
   integrity sha512-AUt44v3YJeggO2ZU5BkXI7M4hu9BF2zzH2iF2V5pyXT/lRTyWiElZ7It+bRH1EshoMRxHgpYg4VB6rCM+mG5jQ==
+
+"@prisma/driver-adapter-utils@5.20.0":
+  version "5.20.0"
+  resolved "https://registry.yarnpkg.com/@prisma/driver-adapter-utils/-/driver-adapter-utils-5.20.0.tgz#f7a48f1019000b0ae29655f7d50cb34e7d4f4ff4"
+  integrity sha512-xORRckszVdB8pgh8jcCsEdAniknu2RLzpHmjPQwFHoacMDF44JcbUbtNijFPiZMWRCeLxd1QZkhxgWn2xJB1tQ==
+  dependencies:
+    "@prisma/debug" "5.20.0"
 
 "@prisma/driver-adapter-utils@5.22.0":
   version "5.22.0"
@@ -2144,6 +2156,18 @@
   integrity sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==
   dependencies:
     tslib "^2.8.0"
+
+"@tidbcloud/prisma-adapter@^5.20.0":
+  version "5.20.0"
+  resolved "https://registry.yarnpkg.com/@tidbcloud/prisma-adapter/-/prisma-adapter-5.20.0.tgz#2e958894bb03263afe70a1c7fd04c47b8f2a8511"
+  integrity sha512-m5ZnpkdCVdxCaKUh5WopoNVEKe0aiQQg+f/PtQrQQxIAH2SE38ou6Enjl6CqmIs5T2TMcRi1sU+8la3lc/9fjQ==
+  dependencies:
+    "@prisma/driver-adapter-utils" "5.20.0"
+
+"@tidbcloud/serverless@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@tidbcloud/serverless/-/serverless-0.2.0.tgz#ce62e70ba129714fb7acf9b9e01b974cf5e39d92"
+  integrity sha512-UGmMa9hYeRVcmDjsUE/vNYbsiS4PGHU2M9Y+DFyMUu6gRMxXOfda6rTTnuHQ5OzUsbk6AfV4gtJoEUWvmpBpJw==
 
 "@tootallnate/once@2.0.0":
   version "2.0.0"
