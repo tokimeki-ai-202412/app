@@ -2,8 +2,8 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import { PrismaClient } from '@prisma/client';
 import type { Metadata, ResolvingMetadata } from 'next';
 import type { ReactElement, ReactNode } from 'react';
-import {connect} from "@tidbcloud/serverless";
-import {PrismaTiDBCloud} from "@tidbcloud/prisma-adapter";
+import { connect } from '@tidbcloud/serverless';
+import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
 
 export const runtime = 'edge';
 

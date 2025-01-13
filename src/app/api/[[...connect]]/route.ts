@@ -13,8 +13,8 @@ import { createContextValues } from '@connectrpc/connect';
 import { PrismaClient } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 
-import { connect } from "@tidbcloud/serverless";
-import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
+import { connect } from '@tidbcloud/serverless';
+import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter';
 
 export const runtime = 'edge';
 
